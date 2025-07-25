@@ -1,13 +1,11 @@
-from postify.database import SessionLocal
+from postify.database_managing.database import SessionLocal
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
-from .database import get_db
-from postify.models import Order
+from .database_managing.database import get_db
+from postify.database_managing.models import Order
 
 app = FastAPI()
-
-
 
 @app.get("/orders")
 def read_orders(db: Session = Depends(get_db)):
@@ -18,14 +16,21 @@ def read_orders(db: Session = Depends(get_db)):
     else:
         return orders
 
-
-@app.get("/orders/{order_id}")
-def read_order(order_id : str, db:Session = Depends(get_db)):
+@app.get("/orders/{identification}")
+def read_order(identification : str, db:Session = Depends(get_db)):
+    order = None
     try:
-        order = db.query(Order).filter(
-            Order.Order_ID == order_id
-        ).first()
+        if len(identification) == 10:
+            order = db.query(Order).filter(
+                Order.Mobile == identification
+            ).first()
+        else:
+            identification = identification.strip("#")
+            order = db.query(Order).filter(
+                Order.Order_ID == f"#{identification}"
+            ).first()
         
+
         if not order:
             raise HTTPException(
                 status_code=404, detail="Order Not Found"
