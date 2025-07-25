@@ -10,7 +10,6 @@ def get_credentials(json_filename,env_filename):
         else:
             load_dotenv()
             credentials = json.loads(os.getenv(env_filename))
-        pass
     except json.JSONDecodeError as je:
         print(f"Json Error : {je}")
     except Exception as e:
