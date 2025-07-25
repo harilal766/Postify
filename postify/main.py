@@ -7,8 +7,6 @@ from postify.models import Order
 
 app = FastAPI()
 
-
-
 @app.get("/orders")
 def read_orders(db: Session = Depends(get_db)):
     try:
@@ -18,12 +16,13 @@ def read_orders(db: Session = Depends(get_db)):
     else:
         return orders
 
-
 @app.get("/orders/{order_id}")
 def read_order(order_id : str, db:Session = Depends(get_db)):
     try:
+        if order_id[0] == "#":
+            order_id.strip("#")
         order = db.query(Order).filter(
-            Order.Order_ID == order_id
+            Order.Order_ID == f"#{order_id}"
         ).first()
         
         if not order:
