@@ -16,15 +16,21 @@ def read_orders(db: Session = Depends(get_db)):
     else:
         return orders
 
-@app.get("/orders/{order_id}")
-def read_order(order_id : str, db:Session = Depends(get_db)):
+@app.get("/orders/{identification}")
+def read_order(identification : str, db:Session = Depends(get_db)):
+    order = None
     try:
-        if order_id[0] == "#":
-            order_id.strip("#")
-        order = db.query(Order).filter(
-            Order.Order_ID == f"#{order_id}"
-        ).first()
+        if len(identification) == 10:
+            order = db.query(Order).filter(
+                Order.Mobile == identification
+            ).first()
+        else:
+            identification = identification.strip("#")
+            order = db.query(Order).filter(
+                Order.Order_ID == f"#{identification}"
+            ).first()
         
+
         if not order:
             raise HTTPException(
                 status_code=404, detail="Order Not Found"

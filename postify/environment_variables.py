@@ -1,11 +1,9 @@
 from postify.utils import *
 
+credentials = get_credentials(json_filename="credentials.json", env_filename="CREDENTIALS")
 
-
-db_access = get_credentials(json_filename="db_access.json", env_filename="DB_ACCESS")
+db_access = credentials["database"]
 db_connection = db_access["connection"]
 order_table = db_access["tablename"]
 
-
-
-SHOPIFY_API_DICT = 0
+shopify_stores = credentials["shopify_stores"]

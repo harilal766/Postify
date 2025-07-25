@@ -10,4 +10,5 @@ class Order(Base):
     Order_ID = Column(String)
     Name = Column(String)
     Barcode = Column(String)
+    Mobile = Column(String)
     
