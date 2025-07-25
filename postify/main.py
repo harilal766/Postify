@@ -1,9 +1,9 @@
-from postify.database import SessionLocal
+from postify.database_managing.database import SessionLocal
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
-from .database import get_db
-from postify.models import Order
+from .database_managing.database import get_db
+from postify.database_managing.models import Order
 
 app = FastAPI()
 
