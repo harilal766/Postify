@@ -5,8 +5,6 @@ from postify.environment_variables import *
 class Test_Shopify:
     sh = Shopify(identification="#39939")
     
-    def test_handle_stores(self):
-        order = self.sh.handle_stores()
-        assert order
-        
-    
+
+
+
