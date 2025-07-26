@@ -8,17 +8,16 @@ class Shopify:
         self.identification = identification
         self.shopify_dict = shopify_stores
         
-    def handle_stores(self):
+    def search_in_all_unscheduled_stores(self):
         unscheduled_order = None
         try:
             for store, store_dict in self.shopify_dict.items():
-                print(store)
                 order = self.order_detail(
                     storename=store_dict["storename"],
                     access_token=store_dict["access_token"]
                 )
                 if order != []:
-                    unscheduled_order = order
+                    unscheduled_order = order[0]
                     break
 
         except Exception as e:
@@ -50,7 +49,6 @@ class Shopify:
                     """ % self.identification
             
             if re.match(self.order_id_pattern, self.identification):
-                print("Verified order id")
                 response = requests.post(
                     base_url, headers=headers,json = {"query" : shopify_basic_query}
                 )
