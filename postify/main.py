@@ -20,18 +20,17 @@ def read_orders(db: Session = Depends(get_db)):
 def read_order(identification : str, db:Session = Depends(get_db)):
     order = None
     try:
-        if len(identification) == 10:
-            order = db.query(Order).filter(
-                Order.Mobile == identification
-            ).first()
-        else:
+        if identification[0] == "#":
             identification = identification.strip("#")
-            order = db.query(Order).filter(
-                Order.Order_ID == f"#{identification}"
-            ).first()
         
-
-        if not order:
+        scheduled_order = db.query(Order).filter(
+            (Order.Mobile == identification) | 
+            (Order.Order_ID == f"#{identification}")
+        ).first()
+        
+        if scheduled_order:
+            order = scheduled_order
+        else:
             raise HTTPException(
                 status_code=404, detail="Order Not Found"
             )
