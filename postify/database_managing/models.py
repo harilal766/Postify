@@ -1,14 +1,15 @@
 from .database import Base
 from sqlalchemy import Column, ForeignKey, Integer, String
 
-
 from ..environment_variables import order_table
 
-class Order(Base):
+class Scheduled_Order(Base):
     __tablename__ = order_table
     Trans_ID = Column(Integer, primary_key=True)
-    Order_ID = Column(String)
+    Order_ID = Column(String,index=True)
     Name = Column(String)
     Barcode = Column(String)
     Mobile = Column(String)
+    Products = Column(String)
+    Entry_Date = Column(String)
     
