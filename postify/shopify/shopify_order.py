@@ -41,6 +41,7 @@ class Shopify:
                             edges {
                                 node {
                                     name
+                                    createdAt
                                     displayFulfillmentStatus
                                 }
                             }
