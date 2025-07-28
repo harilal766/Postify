@@ -51,11 +51,11 @@ def read_order(identification : str, db:Session = Depends(get_db),api_key:str=De
                 "Name" : scheduled_order.Name,
                 "Order_id" : scheduled_order.Order_ID,
                 "Mobile" : scheduled_order.Mobile,
-                "Status" : f"Scheduled, Track on : https://app.indiapost.gov.in/enterpriseportal/track-result/article-number/{scheduled_order.Barcode}",
+                "Status" : f"Scheduled, Track on : https://app.indiapost.gov.in/enterpriseportal/track-result/article-number/{scheduled_order.Barcode}"
             }
+
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
-            print(f" D : {unscheduled_order}")
             node = unscheduled_order.get("node",None)
             if node:
                 status = "Found in unscheduled orders"
@@ -65,9 +65,10 @@ def read_order(identification : str, db:Session = Depends(get_db),api_key:str=De
                     "Status" : f"Confirmed, {node["displayFulfillmentStatus"].capitalize()}."
                 }
             else:
-                raise HTTPException(
+                return HTTPException(
                     status_code=404, detail="Order Not Found"
                 )
+                
             
     except Exception as e:
         print(f"Order detail error : {e}")

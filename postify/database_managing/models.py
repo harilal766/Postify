@@ -12,4 +12,3 @@ class Scheduled_Order(Base):
     Mobile = Column(String)
     Products = Column(String)
     Entry_Date = Column(String)
-    

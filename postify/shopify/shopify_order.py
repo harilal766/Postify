@@ -43,6 +43,7 @@ class Shopify:
                                     name
                                     createdAt
                                     displayFulfillmentStatus
+                                    
                                 }
                             }
                         }
