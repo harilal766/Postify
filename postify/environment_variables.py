@@ -7,3 +7,6 @@ db_connection = db_access["connection"]
 order_table = db_access["tablename"]
 
 shopify_stores = credentials["shopify_stores"]
+
+
+API_KEY = credentials["security"]["api_key"]

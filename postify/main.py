@@ -1,21 +1,26 @@
-from postify.database_managing.database import SessionLocal
+
+from typing import Annotated
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+
 from .database_managing.database import get_db
 from .database_managing.models import Scheduled_Order
 from .shopify.shopify_order import Shopify
 from .environment_variables import *
 from .response import Tracking_Response
-
+from .security import verify_api_key
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
+
 
 class Order:
     pass
 
 
 @app.get("/orders",status_code = 200)
-def read_orders(db: Session = Depends(get_db)):
+def read_orders(db: Session = Depends(get_db),api_key:str=Depends(verify_api_key)):
     try:
         orders = db.query(Scheduled_Order).all()
     except Exception as e:
@@ -24,7 +29,7 @@ def read_orders(db: Session = Depends(get_db)):
         return orders
 
 @app.get("/orders/{identification}",status_code = 200)
-def read_order(identification : str, db:Session = Depends(get_db)):
+def read_order(identification : str, db:Session = Depends(get_db),api_key:str=Depends(verify_api_key)):
     order_response = None
     status = None; sh_inst = Shopify(identification=identification)
     try:
