@@ -14,10 +14,24 @@ from .security import verify_api_key
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
+import re
 
 class Order:
     pass
 
+@app.get("/id_check/{order_id}",status_code = 200)
+def regex_check(order_id : str):
+    is_verified = None
+    try:
+        id_match = re.match(r'^#?\d{4,5}$',order_id)
+        if id_match:
+            is_verified = True
+        else:
+            is_verified = False
+    except Exception as e:
+        print(e)
+    else:
+        return {"status" : is_verified}
 
 @app.get("/orders",status_code = 200)
 def read_orders(db: Session = Depends(get_db),api_key:str=Depends(verify_api_key)):
