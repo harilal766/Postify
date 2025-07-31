@@ -1,21 +1,26 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, Header
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from .database_managing.database import get_db
 from .database_managing.models import Scheduled_Order
 from .shopify.shopify_order import Shopify
 from .environment_variables import *
 from .response import Tracking_Response
 from .security import verify_api_key
-app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 import re
 
-class Order:
-    pass
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,allow_origins = ["*"],allow_credentials = True,
+    allow_methods = ["GET"],allow_headers = ["*"],
+)
 
 @app.get("/id_check/{order_id}",status_code = 200)
 def regex_check(order_id : str):
@@ -41,7 +46,7 @@ def read_orders(db: Session = Depends(get_db),api_key:str=Depends(verify_api_key
         return orders
 
 @app.get("/orders/{identification}",status_code = 200)
-def read_order(identification : str, db:Session = Depends(get_db),api_key:str=Depends(verify_api_key)):
+def read_order(identification : str, db:Session = Depends(get_db)):
     order_response = None
     status = None; sh_inst = Shopify(identification=identification)
     try:
