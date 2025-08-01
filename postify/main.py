@@ -20,12 +20,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 app = FastAPI()
 
-"""
+
 app.add_middleware(
-    CORSMiddleware,allow_origins = ["*"],allow_credentials = True,
+    CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-"""
+
 
 @app.get("/orders/{identification}",status_code = 200)
 def read_order(identification : str, db:Session = Depends(get_db)):
@@ -35,7 +35,6 @@ def read_order(identification : str, db:Session = Depends(get_db)):
     }
     status = None; sh_inst = Shopify(identification=identification)
     try:
-        print(unquote(identification))
         # input sanitization
         if identification[0] == "#":
             identification = identification.lstrip("#")
@@ -73,8 +72,6 @@ def read_order(identification : str, db:Session = Depends(get_db)):
                 return HTTPException(
                     status_code=404, detail="Order Not Found"
                 )
-                
-            
     except Exception as e:
         print(f"Order detail error : {e}")
     else:
