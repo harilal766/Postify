@@ -57,9 +57,14 @@ def read_order(identification : str, db:Session = Depends(get_db)):
 
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
+            print(unscheduled_order)
             node = unscheduled_order.get("node",None)
             if node:
+                customer = node.get("billingAddress",None)
                 status = "Found in unscheduled orders"
+                if customer:
+                    order_response["Name"] = customer["name"]
+                    order_response["Mobile"] = customer["phone"]
                 order_response["Order_id"] = node["name"]
                 order_response["Order date"] =  node["createdAt"].split("T")[0]
                 order_response["Status"] = f"Confirmed, {node["displayFulfillmentStatus"].capitalize()}."
@@ -83,8 +88,6 @@ def read_order(identification : str, db:Session = Depends(get_db)):
             
             html_template = html_template.replace(f"<td>{key}</td>",f"<td>{value}</td>",)
         
-            
         return HTMLResponse(content = html_template, status_code=200)
-        #return order_response
 
 

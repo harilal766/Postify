@@ -43,7 +43,10 @@ class Shopify:
                                     name
                                     createdAt
                                     displayFulfillmentStatus
-                                    
+                                    billingAddress{
+                                        name
+                                        phone
+                                    }
                                 }
                             }
                         }
