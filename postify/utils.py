@@ -17,3 +17,15 @@ def get_credentials(json_filename,env_filename):
     else:
         return credentials
     
+    
+def html_reader(html_file):
+    html_text = None
+    try:
+        available_files = os.listdir("postify/")
+        if html_file in available_files:
+            with open(f"postify/{html_file}","r", encoding="utf-8") as html:
+                html_text = html.read()
+    except Exception as e:
+        print(e)
+    else:
+        return html_text

@@ -1,17 +1,19 @@
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+
 from .database_managing.database import get_db
 from .database_managing.models import Scheduled_Order
 from .shopify.shopify_order import Shopify
 from .environment_variables import *
 from .response import Tracking_Response
 from .security import verify_api_key
-
+from .utils import html_reader
 import re
+from pprint import pprint
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
@@ -22,32 +24,15 @@ app.add_middleware(
     allow_methods = ["GET"],allow_headers = ["*"],
 )
 
-@app.get("/id_check/{order_id}",status_code = 200)
-def regex_check(order_id : str):
-    is_verified = None
-    try:
-        id_match = re.match(r'^#?\d{4,5}$',order_id)
-        if id_match:
-            is_verified = True
-        else:
-            is_verified = False
-    except Exception as e:
-        print(e)
-    else:
-        return {"status" : is_verified}
-
-@app.get("/orders",status_code = 200)
-def read_orders(db: Session = Depends(get_db),api_key:str=Depends(verify_api_key)):
-    try:
-        orders = db.query(Scheduled_Order).all()
-    except Exception as e:
-        print(e)
-    else:
-        return orders
 
 @app.get("/orders/{identification}",status_code = 200)
 def read_order(identification : str, db:Session = Depends(get_db)):
-    order_response = None
+    order_response = {
+                "Name" : None,
+                "Order_id" : None,
+                "Mobile" : None,
+                "Status" : None
+            }
     status = None; sh_inst = Shopify(identification=identification)
     try:
         # input sanitization
@@ -64,23 +49,20 @@ def read_order(identification : str, db:Session = Depends(get_db)):
         if scheduled_order:
             status = "Found in scheduled orders."
             scheduled_order = scheduled_order[-1]
-            order_response = {
-                "Name" : scheduled_order.Name,
-                "Order_id" : scheduled_order.Order_ID,
-                "Mobile" : scheduled_order.Mobile,
-                "Status" : f"Scheduled, Track on : https://app.indiapost.gov.in/enterpriseportal/track-result/article-number/{scheduled_order.Barcode}"
-            }
+            
+            order_response["Name"] = scheduled_order.Name
+            order_response["Order_id"] = scheduled_order.Order_ID
+            order_response["Mobile"] = scheduled_order.Mobile
+            order_response["Status"] = f"Scheduled, Track on : https://app.indiapost.gov.in/enterpriseportal/track-result/article-number/{scheduled_order.Barcode}"
 
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
             node = unscheduled_order.get("node",None)
             if node:
                 status = "Found in unscheduled orders"
-                order_response = {
-                    "Order_id" : node["name"],
-                    "Order date" : node["createdAt"].split("T")[0],
-                    "Status" : f"Confirmed, {node["displayFulfillmentStatus"].capitalize()}."
-                }
+                order_response["Order_id"] = node["name"]
+                order_response["Order date"] =  node["createdAt"].split("T")[0]
+                order_response["Status"] = f"Confirmed, {node["displayFulfillmentStatus"].capitalize()}."
             else:
                 return HTTPException(
                     status_code=404, detail="Order Not Found"
@@ -90,6 +72,19 @@ def read_order(identification : str, db:Session = Depends(get_db)):
     except Exception as e:
         print(f"Order detail error : {e}")
     else:
-        return order_response
+        html_template = html_reader("tracking_template.html")
+        
+        for key,value in order_response.items():
+            print(key,value)
+            if value != None and "https" in value:
+                value_split = value.split(" ")
+                value_split[-1] = f"<a href='{value_split[-1]}' target='_blank'>Click</a>"
+                value = ' '.join(value_split)
+            
+            html_template = html_template.replace(f"<td>{key}</td>",f"<td>{value}</td>",)
+        
+            
+        return HTMLResponse(content = html_template, status_code=200)
+        #return order_response
 
 
