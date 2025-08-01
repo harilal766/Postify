@@ -12,6 +12,7 @@ from .environment_variables import *
 from .response import Tracking_Response
 from .security import verify_api_key
 from .utils import html_reader
+from urllib.parse import unquote
 import re
 from pprint import pprint
 
@@ -19,25 +20,25 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 app = FastAPI()
 
+"""
 app.add_middleware(
     CORSMiddleware,allow_origins = ["*"],allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-
+"""
 
 @app.get("/orders/{identification}",status_code = 200)
 def read_order(identification : str, db:Session = Depends(get_db)):
     order_response = {
-                "Name" : None,
-                "Order_id" : None,
-                "Mobile" : None,
-                "Status" : None
-            }
+        "Name" : None,"Order_id" : None,
+        "Mobile" : None,"Status" : None
+    }
     status = None; sh_inst = Shopify(identification=identification)
     try:
+        print(unquote(identification))
         # input sanitization
         if identification[0] == "#":
-            identification = identification.strip("#")
+            identification = identification.lstrip("#")
         elif len(identification) == 10:
             #identification = 
             print(identification)
@@ -78,7 +79,6 @@ def read_order(identification : str, db:Session = Depends(get_db)):
         print(f"Order detail error : {e}")
     else:
         html_template = html_reader("tracking_template.html")
-        
         for key,value in order_response.items():
             print(key,value)
             if value != None and "https" in value:
