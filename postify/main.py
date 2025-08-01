@@ -27,7 +27,7 @@ app.add_middleware(
 )
 """
 
-@app.get("/orders/{identification}",status_code = 200)
+@app.get("/orders/{identification}/html",status_code = 200)
 def read_order(identification : str, db:Session = Depends(get_db)):
     order_response = {
         "Name" : None,"Order_id" : None,
