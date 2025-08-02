@@ -20,15 +20,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 app = FastAPI()
 
-
 app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
 
-
-@app.get("/orders/{identification}",status_code = 200)
-def read_order(identification : str, db:Session = Depends(get_db)):
+def get_order(identification : str, db):
     order_response = {
         "Name" : None,"Order_id" : None,
         "Mobile" : None,"Status" : None
@@ -75,8 +72,18 @@ def read_order(identification : str, db:Session = Depends(get_db)):
     except Exception as e:
         print(f"Order detail error : {e}")
     else:
+        return order_response
+
+@app.get("/orders/{identification}/html",status_code = 200)
+def read_order(identification : str, db:Session = Depends(get_db)):
+    order = None
+    try:
+        order = get_order(identification=identification, db=db)
+    except Exception as e:
+        print(f"Order detail error : {e}")
+    else:
         html_template = html_reader("tracking_template.html")
-        for key,value in order_response.items():
+        for key,value in order.items():
             print(key,value)
             if value != None and "https" in value:
                 value_split = value.split(" ")
