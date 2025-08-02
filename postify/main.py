@@ -86,11 +86,14 @@ def order_page(identification : str, db:Session = Depends(get_db)):
         html_template = html_reader("tracking_template.html")
         tab = "    "
         table_placeholder = "{{TABLE}}"
+        table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
+        tab_count  = re.search(tab,table_placeholder_match.group())
         table_start = f'<table class="table table-bordered table-striped">\n'
         table_end = '</table>'
         
         for key,value in order.items():
-            print(key,value)
+            link_match = re.search(r'https://[\w\.\/\-]*',value)
+            print(link_match)
             table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
             """
             if value != None and "https" in value:
@@ -99,5 +102,5 @@ def order_page(identification : str, db:Session = Depends(get_db)):
                 value = ' '.join(value_split)
             """
         html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
-        print(html_template)
+        #print(html_template)
         return HTMLResponse(content = html_template, status_code=200)
