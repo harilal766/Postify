@@ -84,13 +84,20 @@ def order_page(identification : str, db:Session = Depends(get_db)):
         print(f"Order detail error : {e}")
     else:
         html_template = html_reader("tracking_template.html")
+        tab = "    "
+        table_placeholder = "{{TABLE}}"
+        table_start = f'<table class="table table-bordered table-striped">\n'
+        table_end = '</table>'
+        
         for key,value in order.items():
             print(key,value)
+            table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
+            """
             if value != None and "https" in value:
                 value_split = value.split(" ")
                 value_split[-1] = f"<a href='{value_split[-1]}' target='_blank'>Click</a>"
                 value = ' '.join(value_split)
-            
-            html_template = html_template.replace(f"<td>{key}</td>",f"<td>{value}</td>",)
-        
+            """
+        html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
+        print(html_template)
         return HTMLResponse(content = html_template, status_code=200)
