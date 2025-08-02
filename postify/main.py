@@ -25,7 +25,8 @@ app.add_middleware(
     allow_methods = ["GET"],allow_headers = ["*"],
 )
 
-def get_order(identification : str, db):
+@app.get("/orders/{identification}")
+def get_order(identification : str, db:Session = Depends(get_db)):
     order_response = {
         "Name" : None,"Order_id" : None,
         "Mobile" : None,"Status" : None
@@ -75,7 +76,7 @@ def get_order(identification : str, db):
         return order_response
 
 @app.get("/orders/{identification}/html",status_code = 200)
-def read_order(identification : str, db:Session = Depends(get_db)):
+def order_page(identification : str, db:Session = Depends(get_db)):
     order = None
     try:
         order = get_order(identification=identification, db=db)
@@ -93,5 +94,3 @@ def read_order(identification : str, db:Session = Depends(get_db)):
             html_template = html_template.replace(f"<td>{key}</td>",f"<td>{value}</td>",)
         
         return HTMLResponse(content = html_template, status_code=200)
-
-
