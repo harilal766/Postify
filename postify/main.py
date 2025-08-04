@@ -96,11 +96,13 @@ def order_page(identification : str, db:Session = Depends(get_db)):
         table_end = '</table>'
         
         for key,value in order.items():
-            link_matches = re.findall(r'https://{1}[^\s]*',value)
-            for link in link_matches:
-                if len(link) > 0:
-                    value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
-            table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
+            if value:
+                link_matches = re.findall(r'https://[^\s\#]*',value)
+                for link in link_matches:
+                    if len(link) > 0:
+                        value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
+                table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
+                
+        # convert the placeholder to created table tag
         html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
-        #print(html_template)
         return HTMLResponse(content = html_template, status_code=200)
