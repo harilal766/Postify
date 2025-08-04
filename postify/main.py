@@ -51,8 +51,12 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             order_response["Name"] = scheduled_order.Name
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
-            order_response["Status"] = f"Scheduled, Track on : https://app.indiapost.gov.in/enterpriseportal/track-result/article-number/{scheduled_order.Barcode}"
+            order_response.update({
+                "Speedpost Tracking Id" : scheduled_order.Barcode
+            })
+            order_response["Status"] = f"Scheduled, Track on : https://www.indiapost.gov.in/track-result/article-number/{scheduled_order.Barcode}"
 
+            
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
             print(unscheduled_order)
@@ -92,15 +96,11 @@ def order_page(identification : str, db:Session = Depends(get_db)):
         table_end = '</table>'
         
         for key,value in order.items():
-            link_match = re.search(r'https://[\w\.\/\-]*',value)
-            print(link_match)
+            link_matches = re.findall(r'https://{1}.*',value)
+            for link in link_matches:
+                if len(link) > 0:
+                    value = value.replace(link, f"<a href='{link}'>{link}</a>")
             table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
-            """
-            if value != None and "https" in value:
-                value_split = value.split(" ")
-                value_split[-1] = f"<a href='{value_split[-1]}' target='_blank'>Click</a>"
-                value = ' '.join(value_split)
-            """
         html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
         #print(html_template)
         return HTMLResponse(content = html_template, status_code=200)
