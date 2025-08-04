@@ -20,22 +20,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 app = FastAPI()
 
-"""
 app.add_middleware(
-    CORSMiddleware,allow_origins = ["*"],allow_credentials = True,
+    CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-"""
 
-@app.get("/orders/{identification}/html",status_code = 200)
-def read_order(identification : str, db:Session = Depends(get_db)):
+@app.get("/orders/{identification}")
+def get_order(identification : str, db:Session = Depends(get_db)):
     order_response = {
         "Name" : None,"Order_id" : None,
         "Mobile" : None,"Status" : None
     }
     status = None; sh_inst = Shopify(identification=identification)
     try:
-        print(unquote(identification))
         # input sanitization
         if identification[0] == "#":
             identification = identification.lstrip("#")
@@ -54,8 +51,12 @@ def read_order(identification : str, db:Session = Depends(get_db)):
             order_response["Name"] = scheduled_order.Name
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
-            order_response["Status"] = f"Scheduled, Track on : https://app.indiapost.gov.in/enterpriseportal/track-result/article-number/{scheduled_order.Barcode}"
+            order_response.update({
+                "Speedpost Tracking Id" : scheduled_order.Barcode
+            })
+            order_response["Status"] = f"Scheduled, Track on : https://www.indiapost.gov.in/track-result/article-number/{scheduled_order.Barcode}"
 
+            
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
             print(unscheduled_order)
@@ -73,21 +74,33 @@ def read_order(identification : str, db:Session = Depends(get_db)):
                 return HTTPException(
                     status_code=404, detail="Order Not Found"
                 )
-                
-            
+    except Exception as e:
+        print(f"Order detail error : {e}")
+    else:
+        return order_response
+
+@app.get("/orders/{identification}/html",status_code = 200)
+def order_page(identification : str, db:Session = Depends(get_db)):
+    order = None
+    try:
+        order = get_order(identification=identification, db=db)
     except Exception as e:
         print(f"Order detail error : {e}")
     else:
         html_template = html_reader("tracking_template.html")
-        for key,value in order_response.items():
-            print(key,value)
-            if value != None and "https" in value:
-                value_split = value.split(" ")
-                value_split[-1] = f"<a href='{value_split[-1]}' target='_blank'>Click</a>"
-                value = ' '.join(value_split)
-            
-            html_template = html_template.replace(f"<td>{key}</td>",f"<td>{value}</td>",)
+        tab = "    "
+        table_placeholder = "{{TABLE}}"
+        table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
+        tab_count  = re.search(tab,table_placeholder_match.group())
+        table_start = f'<table class="table table-bordered table-striped">\n'
+        table_end = '</table>'
         
+        for key,value in order.items():
+            link_matches = re.findall(r'https://{1}.*',value)
+            for link in link_matches:
+                if len(link) > 0:
+                    value = value.replace(link, f"<a href='{link}'>{link}</a>")
+            table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
+        html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
+        #print(html_template)
         return HTMLResponse(content = html_template, status_code=200)
-
-
