@@ -54,7 +54,7 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             order_response.update({
                 "Speedpost Tracking Id" : scheduled_order.Barcode
             })
-            order_response["Status"] = f"Scheduled, Track on : https://www.indiapost.gov.in/track-result/article-number/{scheduled_order.Barcode}"
+            order_response["Status"] = f"Scheduled, track <strong>{scheduled_order.Barcode}</strong> on : https://www.indiapost.gov.in"
 
             
         else:
@@ -92,7 +92,7 @@ def order_page(identification : str, db:Session = Depends(get_db)):
         table_placeholder = "{{TABLE}}"
         table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
         tab_count  = re.search(tab,table_placeholder_match.group())
-        table_start = f'<table class="table table-bordered table-striped">\n'
+        table_start = f'<table class="table table-bordered table-striped table-rounded">\n'
         table_end = '</table>'
         
         for key,value in order.items():
