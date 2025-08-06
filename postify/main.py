@@ -33,22 +33,8 @@ def get_order(identification : str, db:Session = Depends(get_db)):
     }
     status = None; sh_inst = Shopify(identification=identification)
     try:
-        # input sanitization
-        if len(identification) >= 10:
-            scheduled_order = db.query(Scheduled_Order).filter(
-                Scheduled_Order.Mobile == identification     
-            ).all()
-        else:
-            scheduled_order = db.query(Scheduled_Order).filter(
-                Scheduled_Order.Order_ID == identification    
-            ).all()
-            
-            print(scheduled_order)
-            
-        if len(scheduled_order) > 0:
-            status = "Found in scheduled orders."
-            scheduled_order = scheduled_order[-1]
-            
+        scheduled_order = Scheduled_Order().find_scheduled_order(id=f"#{identification}")
+        if scheduled_order:
             order_response["Name"] = scheduled_order.Name
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
@@ -57,7 +43,7 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             })
             order_response["Status"] = f"Scheduled, track <strong>{scheduled_order.Barcode}</strong> on : https://www.indiapost.gov.in"
         else:
-            unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
+            unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
             if unscheduled_order:
                 unscheduled_order = unscheduled_order.get("node",None)
@@ -71,9 +57,7 @@ def get_order(identification : str, db:Session = Depends(get_db)):
                 order_response["Status"] = f"Confirmed, {unscheduled_order["displayFulfillmentStatus"].capitalize()}."
             else:
                 status = 404
-                order_response = "Order Not Found"
-                
-        return JSONResponse(content = order_response, status_code = status)
+        return order_response
     except Exception as e:
         print(f"Order detail error : {e}")
 
