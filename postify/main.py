@@ -39,13 +39,13 @@ def get_order(identification : str, db:Session = Depends(get_db)):
                 Scheduled_Order.Mobile == identification     
             ).all()
         else:
-            if identification[0] == "#":
-                identification = identification.lstrip("#")
             scheduled_order = db.query(Scheduled_Order).filter(
-                Scheduled_Order.Order_ID == f"#{identification}"    
+                Scheduled_Order.Order_ID == "#" + identification    
             ).all()
             
-        if scheduled_order:
+            print(scheduled_order)
+            
+        if len(scheduled_order) > 0:
             status = "Found in scheduled orders."
             scheduled_order = scheduled_order[-1]
             
@@ -56,8 +56,6 @@ def get_order(identification : str, db:Session = Depends(get_db)):
                 "Speedpost Tracking Id" : scheduled_order.Barcode
             })
             order_response["Status"] = f"Scheduled, track <strong>{scheduled_order.Barcode}</strong> on : https://www.indiapost.gov.in"
-
-            
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
             status = 200
@@ -74,10 +72,10 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             else:
                 status = 404
                 order_response = "Order Not Found"
+                
+        return JSONResponse(content = order_response, status_code = status)
     except Exception as e:
         print(f"Order detail error : {e}")
-    else:
-        return JSONResponse(content = order_response, status_code = status)
 
 @app.get("/orders/{identification}/html",status_code = 200)
 def order_page(identification : str, db:Session = Depends(get_db)):
