@@ -40,7 +40,7 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             ).all()
         else:
             scheduled_order = db.query(Scheduled_Order).filter(
-                Scheduled_Order.Order_ID == "#" + identification    
+                Scheduled_Order.Order_ID == identification    
             ).all()
             
             print(scheduled_order)
