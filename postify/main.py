@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -34,16 +34,17 @@ def get_order(identification : str, db:Session = Depends(get_db)):
     status = None; sh_inst = Shopify(identification=identification)
     try:
         # input sanitization
-        if identification[0] == "#":
-            identification = identification.lstrip("#")
-        elif len(identification) == 10:
-            #identification = 
-            print(identification)
-        scheduled_order = db.query(Scheduled_Order).filter(
-            (Scheduled_Order.Mobile == identification) | 
-            (Scheduled_Order.Order_ID == f"#{identification}")    
-        ).all()
-        
+        if len(identification) >= 10:
+            scheduled_order = db.query(Scheduled_Order).filter(
+                Scheduled_Order.Mobile == identification     
+            ).all()
+        else:
+            if identification[0] == "#":
+                identification = identification.lstrip("#")
+            scheduled_order = db.query(Scheduled_Order).filter(
+                Scheduled_Order.Order_ID == f"#{identification}"    
+            )
+            
         if scheduled_order:
             status = "Found in scheduled orders."
             scheduled_order = scheduled_order[-1]
@@ -59,8 +60,9 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
-            unscheduled_order = unscheduled_order.get("node",None)
+            status = 200
             if unscheduled_order:
+                unscheduled_order = unscheduled_order.get("node",None)
                 customer = unscheduled_order.get("billingAddress",None)
                 status = "Found in unscheduled orders"
                 if customer:
@@ -70,20 +72,20 @@ def get_order(identification : str, db:Session = Depends(get_db)):
                 order_response["Order date"] =  unscheduled_order["createdAt"].split("T")[0]
                 order_response["Status"] = f"Confirmed, {unscheduled_order["displayFulfillmentStatus"].capitalize()}."
             else:
-                return HTTPException(
-                    status_code=404, detail="Order Not Found"
-                )
+                status = 404
+                order_response = "Order Not Found"
     except Exception as e:
         print(f"Order detail error : {e}")
     else:
-        return order_response
+        return JSONResponse(content = order_response, status_code = status)
 
 @app.get("/orders/{identification}/html",status_code = 200)
 def order_page(identification : str, db:Session = Depends(get_db)):
     order = None
     try:
         order = get_order(identification=identification, db=db)
-        if order:
+        if order.status_code == 200:
+            status = 200
             html_template = html_reader("tracking_template.html")
             tab = "    "
             table_placeholder = "{{TABLE}}"
@@ -99,10 +101,9 @@ def order_page(identification : str, db:Session = Depends(get_db)):
                             value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
                     table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
             html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
-            status = 200
         else:
-            html_template = html_reader("no_order.html")
             status = 404
+            html_template = html_reader("no_order.html")
         return HTMLResponse(content = html_template, status_code=status)
     except Exception as e:
         print(f"Order detail error : {e}")
