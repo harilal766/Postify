@@ -13,7 +13,7 @@ from .response import Tracking_Response
 from .security import verify_api_key
 from .utils import html_reader
 from urllib.parse import unquote
-import re
+import re, uvicorn
 from pprint import pprint
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
@@ -43,7 +43,7 @@ def get_order(identification : str, db:Session = Depends(get_db)):
                 identification = identification.lstrip("#")
             scheduled_order = db.query(Scheduled_Order).filter(
                 Scheduled_Order.Order_ID == f"#{identification}"    
-            )
+            ).all()
             
         if scheduled_order:
             status = "Found in scheduled orders."
