@@ -59,17 +59,16 @@ def get_order(identification : str, db:Session = Depends(get_db)):
             
         else:
             unscheduled_order = sh_inst.search_in_all_unscheduled_stores()
-            print(unscheduled_order)
-            node = unscheduled_order.get("node",None)
-            if node:
-                customer = node.get("billingAddress",None)
+            unscheduled_order = unscheduled_order.get("node",None)
+            if unscheduled_order:
+                customer = unscheduled_order.get("billingAddress",None)
                 status = "Found in unscheduled orders"
                 if customer:
                     order_response["Name"] = customer["name"]
                     order_response["Mobile"] = customer["phone"]
-                order_response["Order_id"] = node["name"]
-                order_response["Order date"] =  node["createdAt"].split("T")[0]
-                order_response["Status"] = f"Confirmed, {node["displayFulfillmentStatus"].capitalize()}."
+                order_response["Order_id"] = unscheduled_order["name"]
+                order_response["Order date"] =  unscheduled_order["createdAt"].split("T")[0]
+                order_response["Status"] = f"Confirmed, {unscheduled_order["displayFulfillmentStatus"].capitalize()}."
             else:
                 return HTTPException(
                     status_code=404, detail="Order Not Found"
@@ -84,25 +83,26 @@ def order_page(identification : str, db:Session = Depends(get_db)):
     order = None
     try:
         order = get_order(identification=identification, db=db)
+        if order:
+            html_template = html_reader("tracking_template.html")
+            tab = "    "
+            table_placeholder = "{{TABLE}}"
+            table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
+            tab_count  = re.search(tab,table_placeholder_match.group())
+            table_start = f'<table class="table table-bordered table-striped table-rounded">\n'
+            table_end = '</table>'
+            for key,value in order.items():
+                if value:
+                    link_matches = re.findall(r'https://[^\s\#]*',value)
+                    for link in link_matches:
+                        if len(link) > 0:
+                            value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
+                    table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
+            html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
+            status = 200
+        else:
+            html_template = html_reader("no_order.html")
+            status = 404
+        return HTMLResponse(content = html_template, status_code=status)
     except Exception as e:
         print(f"Order detail error : {e}")
-    else:
-        html_template = html_reader("tracking_template.html")
-        tab = "    "
-        table_placeholder = "{{TABLE}}"
-        table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
-        tab_count  = re.search(tab,table_placeholder_match.group())
-        table_start = f'<table class="table table-bordered table-striped table-rounded">\n'
-        table_end = '</table>'
-        
-        for key,value in order.items():
-            if value:
-                link_matches = re.findall(r'https://[^\s\#]*',value)
-                for link in link_matches:
-                    if len(link) > 0:
-                        value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
-                table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
-                
-        # convert the placeholder to created table tag
-        html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
-        return HTMLResponse(content = html_template, status_code=200)
