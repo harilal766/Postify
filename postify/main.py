@@ -1,8 +1,10 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
+
 from fastapi.responses import HTMLResponse, JSONResponse
-from sqlalchemy.orm import Session
+from fastapi.templating import Jinja2Templates
+
 from fastapi.middleware.cors import CORSMiddleware
 from .database_managing.models import Scheduled_Order
 from .shopify.shopify_order import Shopify
@@ -10,18 +12,17 @@ from .environment_variables import *
 from .response import Tracking_Response
 from .security import verify_api_key
 from .utils import html_reader
-from urllib.parse import unquote
 import re, uvicorn
 from pprint import pprint
+from jinja2 import Environment, PackageLoader, select_autoescape
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
+templates = Jinja2Templates(directory="templates")
 
 @app.get("/orders/{identification}")
 def get_order(identification : str):
@@ -60,8 +61,8 @@ def get_order(identification : str):
     except Exception as e:
         print(f"Order detail error : {e}")
 
-@app.get("/orders/{identification}/html",status_code = 200)
-def order_page(identification : str):
+@app.get("/orders/{identification}/html",status_code = 200, response_class=HTMLResponse)
+def order_page(request : Request, identification : str):
     order = None
     try:
         order = get_order(identification=identification)
@@ -85,6 +86,8 @@ def order_page(identification : str):
         else:
             status = 404
             html_template = html_reader("no_order.html")
-        return HTMLResponse(content = html_template, status_code=status)
+            
+        #return templates.TemplateResponse(request=request, name="jinja.html", context={"order" : identification}) 
+        return HTMLResponse(content=html_template,status_code=status)
     except Exception as e:
         print(f"Order detail error : {e}")
