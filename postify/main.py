@@ -41,7 +41,7 @@ def get_order(identification : str):
                 "Speedpost Tracking Id" : scheduled_order.Barcode,
                 "Scheduled on " : scheduled_order.Entry_Date
             })
-            order_response["Status"] = f"Scheduled, track <strong>{scheduled_order.Barcode}</strong> on : https://www.indiapost.gov.in"
+            order_response["Status"] = f"Scheduled, track {scheduled_order.Barcode} on : https://www.indiapost.gov.in"
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
@@ -69,10 +69,21 @@ def order_page(request : Request, identification : str):
         if order:
             status = 200
             
+            
+            
             link_matches = re.search(r'https://[^\s\#]*',order["Status"])
+            tracking_id_matches = re.search(r'EL\d{9}IN',order["Status"])
             if link_matches:
                 matched_link = link_matches.group()
                 order["Status"] = order["Status"].replace(matched_link, f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>")
+                
+            if tracking_id_matches:
+                matched_tracking_id = tracking_id_matches.group()
+                order["Status"] = order["Status"].replace(matched_tracking_id, f"<strong>{matched_tracking_id}</strong>")
+                
+                
+            for key,value in order.items():
+                print(key, value)
         else:
             status = 404
         return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
