@@ -45,7 +45,7 @@ def get_order(identification : str):
                 "Speedpost Tracking Id" : scheduled_order.Barcode,
                 "Scheduled on " : scheduled_order.Entry_Date
             })
-            order_response["Status"] = f"Scheduled, track {scheduled_order.Barcode} on : https://www.indiapost.gov.in"
+            order_response["Status"] = f"Scheduled, Click the Speedpost Tracking id to copy it and track on : https://www.indiapost.gov.in"
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
@@ -87,9 +87,10 @@ def order_page(request : Request, identification : str):
                     
                 if tracking_id_matches:
                     matched_tracking_id = tracking_id_matches.group()
+                    tag = 'span'
                     value = value.replace(
                         matched_tracking_id, 
-                        f"<button class='copy'>{matched_tracking_id}</button>"
+                        f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
                     )
                     
                 order[key] = value
