@@ -4,8 +4,6 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-
-from .database_managing.database import get_db
 from .database_managing.models import Scheduled_Order
 from .shopify.shopify_order import Shopify
 from .environment_variables import *
@@ -26,7 +24,7 @@ app.add_middleware(
 )
 
 @app.get("/orders/{identification}")
-def get_order(identification : str, db:Session = Depends(get_db)):
+def get_order(identification : str):
     order_response = {
         "Name" : None,"Order_id" : None,
         "Mobile" : None,"Status" : None
@@ -62,10 +60,10 @@ def get_order(identification : str, db:Session = Depends(get_db)):
         print(f"Order detail error : {e}")
 
 @app.get("/orders/{identification}/html",status_code = 200)
-def order_page(identification : str, db:Session = Depends(get_db)):
+def order_page(identification : str):
     order = None
     try:
-        order = get_order(identification=identification, db=db)
+        order = get_order(identification=identification)
         if order:
             status = 200
             html_template = html_reader("tracking_template.html")

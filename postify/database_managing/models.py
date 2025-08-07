@@ -1,12 +1,12 @@
-from .database import Base
 from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, declarative_base
 
 from ..environment_variables import order_table,db_connection
 
 from sqlalchemy import create_engine,select
 engine = create_engine(db_connection)
 
+Base = declarative_base()
 
 class Scheduled_Order(Base):
     __tablename__ = order_table
