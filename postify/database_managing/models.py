@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session, declarative_base
 from ..environment_variables import order_table,db_connection
 
 from sqlalchemy import create_engine,select
+from postify.shopify.shopify_order import Shopify
+import re
 engine = create_engine(db_connection)
 
 Base = declarative_base()
@@ -20,7 +22,25 @@ class Scheduled_Order(Base):
     
     @classmethod
     def find_scheduled_order(cls,id:str):
+        """_summary_
+
+        Args:
+            id (str): _description_
+            
+            find the correct order id with suffixes and prefixes if any
+            and return it as the vale to be queried
+
+        Returns:
+            _type_: _description_
+        """
         try:
+            sh = Shopify(identification=id)
+            if re.match(sh.order_id_pattern,id):
+                order = sh.search_in_all_stores()
+                if order:
+                    order_id = order['node']['name']
+                    id = order_id
+            
             with Session(engine) as session:
                 orders = session.scalars(
                     select(cls).where(
