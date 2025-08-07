@@ -22,7 +22,7 @@ app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="postify/templates")
 
 @app.get("/orders/{identification}")
 def get_order(identification : str):
@@ -68,26 +68,14 @@ def order_page(request : Request, identification : str):
         order = get_order(identification=identification)
         if order:
             status = 200
-            html_template = html_reader("tracking_template.html")
-            tab = "    "
-            table_placeholder = "{{TABLE}}"
-            table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
-            tab_count  = re.search(tab,table_placeholder_match.group())
-            table_start = f'<table class="table table-bordered table-striped table-rounded">\n'
-            table_end = '</table>'
-            for key,value in order.items():
-                if value:
-                    link_matches = re.findall(r'https://[^\s\#]*',value)
-                    for link in link_matches:
-                        if len(link) > 0:
-                            value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
-                    table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
-            html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
+            
+            link_matches = re.search(r'https://[^\s\#]*',order["Status"])
+            if link_matches:
+                matched_link = link_matches.group()
+                order["Status"] = order["Status"].replace(matched_link, f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>")
         else:
             status = 404
-            html_template = html_reader("no_order.html")
-            
-        #return templates.TemplateResponse(request=request, name="jinja.html", context={"order" : identification}) 
-        return HTMLResponse(content=html_template,status_code=status)
+        return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
+        #return HTMLResponse(content=html_template,status_code=status)
     except Exception as e:
         print(f"Order detail error : {e}")
