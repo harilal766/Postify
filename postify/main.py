@@ -33,7 +33,7 @@ def get_order(identification : str, db:Session = Depends(get_db)):
     }
     status = None; sh_inst = Shopify(identification=identification)
     try:
-        scheduled_order = Scheduled_Order().find_scheduled_order(id=f"#{identification}")
+        scheduled_order = Scheduled_Order().find_scheduled_order(id=identification)
         if scheduled_order:
             order_response["Name"] = scheduled_order.Name
             order_response["Order_id"] = scheduled_order.Order_ID
@@ -66,7 +66,7 @@ def order_page(identification : str, db:Session = Depends(get_db)):
     order = None
     try:
         order = get_order(identification=identification, db=db)
-        if order.status_code == 200:
+        if order:
             status = 200
             html_template = html_reader("tracking_template.html")
             tab = "    "
