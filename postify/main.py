@@ -37,7 +37,8 @@ def get_order(identification : str):
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
             order_response.update({
-                "Speedpost Tracking Id" : scheduled_order.Barcode
+                "Speedpost Tracking Id" : scheduled_order.Barcode,
+                "Scheduled on " : scheduled_order.Entry_Date
             })
             order_response["Status"] = f"Scheduled, track <strong>{scheduled_order.Barcode}</strong> on : https://www.indiapost.gov.in"
         else:
