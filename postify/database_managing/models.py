@@ -25,10 +25,14 @@ class Scheduled_Order(Base):
         """_summary_
 
         Args:
-            id (str): _description_
+            id (str): shopify order id or the phone number on the order
             
-            find the correct order id with suffixes and prefixes if any
-            and return it as the vale to be queried
+            find the correct order id with suffixes and prefixes from shopify if any,
+            and return it as the value to be queried
+            
+            query the table with the id, it may return one or more than one results if it exists
+            
+            it need to be indexed to find the result
 
         Returns:
             _type_: _description_

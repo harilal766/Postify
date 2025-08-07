@@ -1,8 +1,11 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
+
 from fastapi.responses import HTMLResponse, JSONResponse
-from sqlalchemy.orm import Session
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
 from fastapi.middleware.cors import CORSMiddleware
 from .database_managing.models import Scheduled_Order
 from .shopify.shopify_order import Shopify
@@ -10,18 +13,20 @@ from .environment_variables import *
 from .response import Tracking_Response
 from .security import verify_api_key
 from .utils import html_reader
-from urllib.parse import unquote
 import re, uvicorn
 from pprint import pprint
+from jinja2 import Environment, PackageLoader, select_autoescape
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
+
+
+app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
+templates = Jinja2Templates(directory="postify/templates")
 
 @app.get("/orders/{identification}")
 def get_order(identification : str):
@@ -37,9 +42,10 @@ def get_order(identification : str):
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
             order_response.update({
-                "Speedpost Tracking Id" : scheduled_order.Barcode
+                "Speedpost Tracking Id" : scheduled_order.Barcode,
+                "Scheduled on " : scheduled_order.Entry_Date
             })
-            order_response["Status"] = f"Scheduled, track <strong>{scheduled_order.Barcode}</strong> on : https://www.indiapost.gov.in"
+            order_response["Status"] = f"Scheduled, Click the Speedpost Tracking id to copy it and track on : https://www.indiapost.gov.in"
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
@@ -59,31 +65,38 @@ def get_order(identification : str):
     except Exception as e:
         print(f"Order detail error : {e}")
 
-@app.get("/orders/{identification}/html",status_code = 200)
-def order_page(identification : str):
+@app.get("/orders/{identification}/html",status_code = 200, response_class=HTMLResponse)
+def order_page(request : Request, identification : str):
     order = None
     try:
         order = get_order(identification=identification)
         if order:
             status = 200
-            html_template = html_reader("tracking_template.html")
-            tab = "    "
-            table_placeholder = "{{TABLE}}"
-            table_placeholder_match = re.search(fr'{tab}?{table_placeholder}',html_template)
-            tab_count  = re.search(tab,table_placeholder_match.group())
-            table_start = f'<table class="table table-bordered table-striped table-rounded">\n'
-            table_end = '</table>'
+            
+            
             for key,value in order.items():
-                if value:
-                    link_matches = re.findall(r'https://[^\s\#]*',value)
-                    for link in link_matches:
-                        if len(link) > 0:
-                            value = value.replace(link, f"<a target='_blank' href='{link}'>{link}</a>")
-                    table_start += f"{tab*4}<tr><th>{key}</th><td>{value}</td></tr>\n"
-            html_template = html_template.replace(table_placeholder,f"{table_start}{tab*3}{table_end}",)
+                link_matches = re.search(r'https://[^\s\#]*',value)
+                tracking_id_matches = re.search(r'EL\d{9}IN',value)
+                
+                if link_matches:
+                    matched_link = link_matches.group()
+                    value = value.replace(
+                        matched_link, 
+                        f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
+                    )
+                    
+                if tracking_id_matches:
+                    matched_tracking_id = tracking_id_matches.group()
+                    tag = 'span'
+                    value = value.replace(
+                        matched_tracking_id, 
+                        f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
+                    )
+                    
+                order[key] = value
         else:
             status = 404
-            html_template = html_reader("no_order.html")
-        return HTMLResponse(content = html_template, status_code=status)
+        return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
+        #return HTMLResponse(content=html_template,status_code=status)
     except Exception as e:
         print(f"Order detail error : {e}")
