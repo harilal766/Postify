@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from fastapi.middleware.cors import CORSMiddleware
 from .database_managing.models import Scheduled_Order
@@ -22,6 +23,9 @@ app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
+
+
+app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
 
 @app.get("/orders/{identification}")
@@ -76,11 +80,17 @@ def order_page(request : Request, identification : str):
                 
                 if link_matches:
                     matched_link = link_matches.group()
-                    value = value.replace(matched_link, f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>")
+                    value = value.replace(
+                        matched_link, 
+                        f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
+                    )
                     
                 if tracking_id_matches:
                     matched_tracking_id = tracking_id_matches.group()
-                    value = value.replace(matched_tracking_id, f"<strong>{matched_tracking_id}</strong>")
+                    value = value.replace(
+                        matched_tracking_id, 
+                        f"<button class='copy'>{matched_tracking_id}</button>"
+                    )
                     
                 order[key] = value
         else:
