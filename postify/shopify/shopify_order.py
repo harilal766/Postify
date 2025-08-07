@@ -8,7 +8,7 @@ class Shopify:
         self.identification = identification
         self.shopify_dict = shopify_stores
         
-    def search_in_all_unscheduled_stores(self):
+    def search_in_all_stores(self):
         unscheduled_order = None
         try:
             for store, store_dict in self.shopify_dict.items():

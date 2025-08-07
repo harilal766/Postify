@@ -10,3 +10,7 @@ shopify_stores = credentials["shopify_stores"]
 
 API_KEY = credentials["security"]["api_key"]
 ALLOWED_ORIGINS = credentials["security"]["origins"]
+
+
+TEST_VALUES = credentials["test_values"]
+TEST_ORDER_IDS = TEST_VALUES["order_ids"]
