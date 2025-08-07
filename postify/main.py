@@ -70,20 +70,19 @@ def order_page(request : Request, identification : str):
             status = 200
             
             
-            
-            link_matches = re.search(r'https://[^\s\#]*',order["Status"])
-            tracking_id_matches = re.search(r'EL\d{9}IN',order["Status"])
-            if link_matches:
-                matched_link = link_matches.group()
-                order["Status"] = order["Status"].replace(matched_link, f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>")
-                
-            if tracking_id_matches:
-                matched_tracking_id = tracking_id_matches.group()
-                order["Status"] = order["Status"].replace(matched_tracking_id, f"<strong>{matched_tracking_id}</strong>")
-                
-                
             for key,value in order.items():
-                print(key, value)
+                link_matches = re.search(r'https://[^\s\#]*',value)
+                tracking_id_matches = re.search(r'EL\d{9}IN',value)
+                
+                if link_matches:
+                    matched_link = link_matches.group()
+                    value = value.replace(matched_link, f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>")
+                    
+                if tracking_id_matches:
+                    matched_tracking_id = tracking_id_matches.group()
+                    value = value.replace(matched_tracking_id, f"<strong>{matched_tracking_id}</strong>")
+                    
+                order[key] = value
         else:
             status = 404
         return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
