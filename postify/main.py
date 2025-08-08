@@ -34,7 +34,7 @@ def get_order(identification : str):
         "Name" : None,"Order_id" : None,
         "Mobile" : None,"Status" : None
     }
-    status = None; sh_inst = Shopify(identification=identification)
+    status = None; sh_inst = Shopify(order_id=identification)
     try:
         scheduled_order = Scheduled_Order().find_scheduled_order(id=identification)
         if scheduled_order:
