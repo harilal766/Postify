@@ -20,6 +20,9 @@ class Scheduled_Order(Base):
     Products = Column(String)
     Entry_Date = Column(String)
     
+    def __str__(self):
+        return self.Order_ID
+    
     @classmethod
     def find_scheduled_order(cls,id:str):
         """_summary_
@@ -44,7 +47,7 @@ class Scheduled_Order(Base):
                 if order:
                     order_id = order['node']['name']
                     id = order_id
-            
+                    print(id,)
             with Session(engine) as session:
                 orders = session.scalars(
                     select(cls).where(
