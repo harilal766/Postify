@@ -99,4 +99,4 @@ def order_page(request : Request, identification : str):
         return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
         #return HTMLResponse(content=html_template,status_code=status)
     except Exception as e:
-        print(f"Order detail error : {e}")
+        print(f"Order page error : {e}")
