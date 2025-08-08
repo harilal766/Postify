@@ -16,11 +16,12 @@ class Shopify:
                     storename=store_dict["storename"],
                     access_token=store_dict["access_token"]
                 )
-                order_name = order[0]["node"]["name"]
-                order_name_digits = ''.join([char for char in order_name if char.isdigit()])
-                if order_name_digits == self.identification: 
-                    unscheduled_order = order[0]
-                    break
+                if order:
+                    order_name = order[0]["node"]["name"]
+                    order_name_digits = ''.join([char for char in order_name if char.isdigit()])
+                    if order_name_digits == self.identification: 
+                        unscheduled_order = order[0]
+                        break
         except Exception as e:
             print(e)
         else:
@@ -64,6 +65,6 @@ class Shopify:
         except Exception as e:
             print(e)
         else:
-            if response.status_code == 200:
+            if order != []:
                 return order       
             
