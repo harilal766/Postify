@@ -3,9 +3,9 @@ import re
 from postify.environment_variables import shopify_stores
 
 class Shopify:
-    def __init__(self,identification : str):
+    def __init__(self,order_id : str):
         self.order_id_pattern = r'#?\d{4,5}'
-        self.identification = identification
+        self.order_id = order_id
         self.shopify_dict = shopify_stores
         
     def search_in_all_stores(self):
@@ -19,7 +19,7 @@ class Shopify:
                 if order:
                     order_name = order[0]["node"]["name"]
                     order_name_digits = ''.join([char for char in order_name if char.isdigit()])
-                    if order_name_digits == self.identification: 
+                    if order_name_digits == self.order_id: 
                         unscheduled_order = order[0]
                         break
         except Exception as e:
@@ -38,24 +38,24 @@ class Shopify:
         response = None
         try:
             shopify_basic_query = """
-                    query {
-                        orders(first:1, query: "%s", sortKey: CREATED_AT, reverse: true) {
-                            edges {
-                                node {
+                query {
+                    orders(first:1, query: "%s", sortKey: CREATED_AT, reverse: true) {
+                        edges {
+                            node {
+                                name
+                                createdAt
+                                displayFulfillmentStatus
+                                billingAddress{
                                     name
-                                    createdAt
-                                    displayFulfillmentStatus
-                                    billingAddress{
-                                        name
-                                        phone
-                                    }
+                                    phone
                                 }
                             }
                         }
                     }
-                    """ % self.identification
+                }
+            """ % self.order_id
             
-            if re.match(self.order_id_pattern, self.identification):
+            if re.match(self.order_id_pattern, self.order_id):
                 response = requests.post(
                     base_url, headers=headers,json = {"query" : shopify_basic_query}
                 )

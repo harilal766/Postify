@@ -41,7 +41,7 @@ class Scheduled_Order(Base):
             _type_: _description_
         """
         try:
-            sh = Shopify(identification=id)
+            sh = Shopify(order_id=id)
             if re.match(sh.order_id_pattern,id):
                 order = sh.search_in_all_stores()
                 if order:
