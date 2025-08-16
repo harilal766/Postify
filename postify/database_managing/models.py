@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session, declarative_base
 
 from ..environment_variables import order_table,db_connection
 
-from sqlalchemy import create_engine,select
+from sqlalchemy import create_engine,select,func
 from postify.shopify.shopify_order import Shopify
 import re
 engine = create_engine(db_connection)
 
+import pandas as pd
 Base = declarative_base()
 
 class Scheduled_Order(Base):
@@ -23,23 +24,7 @@ class Scheduled_Order(Base):
     def __str__(self):
         return self.Order_ID
     
-    @classmethod
-    def find_scheduled_order(cls,id:str):
-        """_summary_
-
-        Args:
-            id (str): shopify order id or the phone number on the order
-            
-            find the correct order id with suffixes and prefixes from shopify if any,
-            and return it as the value to be queried
-            
-            query the table with the id, it may return one or more than one results if it exists
-            
-            it need to be indexed to find the result
-
-        Returns:
-            _type_: _description_
-        """
+    def find_scheduled_order(self,id:str):
         try:
             sh = Shopify(order_id=id)
             if re.match(sh.order_id_pattern,id):
@@ -58,4 +43,18 @@ class Scheduled_Order(Base):
                     return orders[-1]
         except Exception as e:
             print(e)
+            
+    @classmethod
+    def filtered_shipment(cls, entry_date:str):
+        orders = None
+        try:
+            with Session(engine) as session:
+                orders = session.query(cls).filter(
+                    func.date(cls.Entry_Date) == entry_date
+                ).all()
+        except Exception as e:
+            print(e)
+        else:
+            return orders
+
 

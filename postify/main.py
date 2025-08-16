@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, Request, Form
+from fastapi import Depends, FastAPI, HTTPException, Request, Form,UploadFile,File
 from fastapi.security import OAuth2PasswordBearer
 
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -101,17 +101,19 @@ def order_page(request : Request, identification : str):
     except Exception as e:
         print(f"Order page error : {e}")
         
-@app.get("/missing")
+@app.get("/missing_form")
 def missing_form(request:Request):
     try:
-        if request.method == "post":
-            entry = request.POST.get("entry")
-            scanned_file = request.POST.get("scanned-file")
-            
         return templates.TemplateResponse(request=request, name="missing.html")
     except Exception as e:
         print(e)
         
-@app.get("/missing/")
-def missing_data():
-    pass
+@app.post("/find_missing")
+def find_missing_orders(entry_date:Annotated[str, Form()],scanned_csv:UploadFile = File(...)):
+    try:
+        if scanned_csv.filename.endswith(".csv"):
+            scanned_shipment = Scheduled_Order().filtered_shipment(entry_date=entry_date)
+            return {"find" : scanned_shipment}
+    except Exception as e :
+        return {"error" : str(e)}
+    
