@@ -100,3 +100,11 @@ def order_page(request : Request, identification : str):
         #return HTMLResponse(content=html_template,status_code=status)
     except Exception as e:
         print(f"Order page error : {e}")
+        
+@app.get("/missing")
+def missing(request:Request):
+    try:
+        return templates.TemplateResponse(request=request, name="missing.html")
+    except Exception as e:
+        print(e)
+        
