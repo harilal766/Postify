@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Form
 from fastapi.security import OAuth2PasswordBearer
 
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -102,9 +102,16 @@ def order_page(request : Request, identification : str):
         print(f"Order page error : {e}")
         
 @app.get("/missing")
-def missing(request:Request):
+def missing_form(request:Request):
     try:
+        if request.method == "post":
+            entry = request.POST.get("entry")
+            scanned_file = request.POST.get("scanned-file")
+            
         return templates.TemplateResponse(request=request, name="missing.html")
     except Exception as e:
         print(e)
         
+@app.get("/missing/")
+def missing_data():
+    pass

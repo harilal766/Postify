@@ -2,17 +2,21 @@
 {% block content %}
 <div class="track d-flex flex-column dgrid gap-3 justify-content-center align-items-center">
     <h1>Missing Orders</h1>
-    <form>
+    <form method="psot" action ="/missing">
         <div class="mb-3">
             <label>CSV file of scanned data</label>
-            <input class="form-control" type="file">
+            <input class="form-control" name="scanned-file" type="file">
         </div>
         <div class="mb-3">
             <label>Shipment Entry Date</label>
-            <input class="form-control" type="text" placeholder="In YYYY-MM-DD format">
+            <input class="form-control" type="text" name="entry" placeholder="In YYYY-MM-DD format">
+        </div>
+        <div class="mb-3">
+            <button class="btn btn-primary" type="submit">Submit</button>
         </div>
     </form>
 </div>
-<div class="missing">
+
+<div id="missing">
 </div>
 {% endblock %}
