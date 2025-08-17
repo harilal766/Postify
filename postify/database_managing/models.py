@@ -45,16 +45,15 @@ class Scheduled_Order(Base):
             print(e)
             
     @classmethod
-    def filtered_shipment(cls, entry_date:str):
+    def find_unscanned_orders(cls, entry_date:str, scanned_barcodes):
         orders = None
         try:
             with Session(engine) as session:
                 orders = session.query(cls).filter(
-                    func.date(cls.Entry_Date) == entry_date
+                    (func.date(cls.Entry_Date) == entry_date),
+                    cls.Barcode.notin_(scanned_barcodes)
                 ).all()
         except Exception as e:
             print(e)
         else:
             return orders
-
-

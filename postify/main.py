@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from fastapi.middleware.cors import CORSMiddleware
-from .database_managing.models import Scheduled_Order
+from .database_managing.models import *
 from .shopify.shopify_order import Shopify
 from .environment_variables import *
 from .response import Tracking_Response
@@ -108,12 +108,31 @@ def missing_form(request:Request):
     except Exception as e:
         print(e)
         
+
+import pandas as pd
+from io import StringIO
+
 @app.post("/find_missing")
-def find_missing_orders(entry_date:Annotated[str, Form()],scanned_csv:UploadFile = File(...)):
+async def find_missing_orders(
+    entry_date:Annotated[str, Form()],
+    scanned_csv:UploadFile = File(...)
+    ):
+    scheduled = Scheduled_Order()
     try:
-        if scanned_csv.filename.endswith(".csv"):
-            scanned_shipment = Scheduled_Order().filtered_shipment(entry_date=entry_date)
-            return {"find" : scanned_shipment}
+        file_contents = await scanned_csv.read()
+        decoded = file_contents.decode("utf-8")
+        scanned_df = pd.read_csv(
+            StringIO(decoded)
+        )
+        scanned_barcodes = scanned_df["name"].to_list()
+        
+        unscanned = Scheduled_Order().find_unscanned_orders(
+            entry_date=entry_date,
+            scanned_barcodes=scanned_barcodes
+        )
+        return {
+            "unscanned" : [order.Order_ID for order in unscanned]
+        }
     except Exception as e :
         return {"error" : str(e)}
     
