@@ -131,7 +131,7 @@ async def find_missing_orders(
             scanned_barcodes=scanned_barcodes
         )
         return {
-            "unscanned" : [order.Order_ID for order in unscanned]
+            "unscanned" : sorted([order.Order_ID for order in unscanned])
         }
     except Exception as e :
         return {"error" : str(e)}
