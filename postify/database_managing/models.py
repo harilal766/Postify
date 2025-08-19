@@ -52,7 +52,7 @@ class Scheduled_Order(Base):
                 orders = session.query(cls).filter(
                     (cls.Entry_Date.in_(selected_entry_dates)),
                     (cls.Barcode.notin_(scanned_barcodes))
-                ).all()
+                ).order_by(cls.Order_ID.desc()).all()
         except Exception as e:
             print(e)
         else:
