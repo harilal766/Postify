@@ -6,5 +6,5 @@ inst = Scheduled_Order()
 date = "2025-08-16"
 class Test:
     def test_filter_with_entry(self):
-        shipment = inst.find_unscanned_orders(entry_date=date)
+        shipment = inst.find_unscanned_orders(selected_entry_dates=date)
         assert shipment

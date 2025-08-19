@@ -103,8 +103,15 @@ def order_page(request : Request, identification : str):
         
 @app.get("/missing_form")
 def missing_form(request:Request):
+    entry_dates = Scheduled_Order().find_all_entry_timestamps()
+    context = {
+        "timestamps" : reversed([timestamp[0] for timestamp in entry_dates])
+        
+    }
     try:
-        return templates.TemplateResponse(request=request, name="missing.html")
+        return templates.TemplateResponse(
+            request=request, name="missing_form.html", context = context
+        )
     except Exception as e:
         print(e)
         
@@ -114,12 +121,13 @@ from io import StringIO
 
 @app.post("/find_missing")
 async def find_missing_orders(request : Request,
-    entry_date:Annotated[str, Form()],
-    scanned_csv:UploadFile = File(...)
+    selected_entries:list[str]=Form(),
+    scanned_csv:UploadFile = File()
     ):
     scheduled = Scheduled_Order()
     context = {
-        "scanned_barcodes" : None, "unscanned_orders" : None
+        "scanned_barcodes" : None, "unscanned_orders" : None,
+        "selected_entries" : None
     }
     try:
         file_contents = await scanned_csv.read()
@@ -129,12 +137,14 @@ async def find_missing_orders(request : Request,
         )
         scanned_barcodes = scanned_df["name"].to_list()
         
-        unscanned = Scheduled_Order().find_unscanned_orders(
-            entry_date=entry_date,
-            scanned_barcodes=scanned_barcodes
+        context["unscanned_orders"] = scheduled.find_unscanned_orders(
+            scanned_barcodes=scanned_barcodes,
+            selected_entry_dates=selected_entries
         )
         context["scanned_barcodes"] = scanned_barcodes
-        context["unscanned_orders"] = sorted([order.Order_ID for order in unscanned])
+        context["selected_entries"] = selected_entries
+        
+        print(context)
         return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
     except Exception as e :
         return {"error" : str(e)}

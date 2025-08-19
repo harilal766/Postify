@@ -9,7 +9,16 @@
         </div>
         <div class="mb-3">
             <label>Shipment Entry Date</label>
-            <input class="form-control" type="text" name="entry_date" placeholder="In YYYY-MM-DD format">
+            {% if timestamps %}
+            <select class="form-select" name="selected_entries" multiple size="4">
+                {% for timestamp in timestamps %}
+                <option  value="{{timestamp}}">{{timestamp}}</option>
+                {% endfor %}
+            </select>
+            {% else %}
+            <h3>No timestamps available.</h3>
+            {% endif %}
+            
         </div>
         <div class="mb-3">
             <button class="btn btn-primary" type="submit">Submit</button>
