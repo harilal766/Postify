@@ -1,20 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-<div>
-    <h2>Scanned Barcodes - {{ scanned_barcodes|length }}</h2>
-    {{scanned_barcodes}}
-    <h2>Unscanned orders - {{unscanned_orders|length}}</h2>
-    {% if unscanned_orders %}
-        <ol>
-            {% for order in unscanned_orders %}
-            <li>{{order.Order_ID}} - {{order.Barcode}} - {{order.Products}}</li>
-            {% endfor %}
-        </ol>
-    {% else %}
-    <h4>Not available</h4>
-    {% endif %}
+<div class="arrange">
     <h2>Selected Timestamps</h2>
     {{selected_entries}}
+
+    <!-- Scanned barcodes-->
+    {% if scanned_barcodes %}
+    <h2>Scanned Barcodes - {{ scanned_barcodes|length }}</h2>
+    <ol>
+    {% for barcode in scanned_barcodes %}
+        <li>{{barcode}}</li>
+    {% endfor %}
+    </ol>
+
+    {% endif %}
+    
+    <!-- Unscanned Orders1-->
+    {% if unscanned_orders %}
+    <h2>Unscanned orders - {{unscanned_orders|length}}</h2>
+    <ol>
+        {% for order in unscanned_orders %}
+        <li>{{order.Order_ID}} - {{order.Barcode}} - {{order.Products}}</li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <h4>No Unscanned Orders</h4>
+    {% endif %}
 </div> 
 
 {% endblock %}

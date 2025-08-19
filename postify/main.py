@@ -106,7 +106,6 @@ def missing_form(request:Request):
     entry_dates = Scheduled_Order().find_all_entry_timestamps()
     context = {
         "timestamps" : reversed([timestamp[0] for timestamp in entry_dates])
-        
     }
     try:
         return templates.TemplateResponse(
@@ -141,10 +140,10 @@ async def find_missing_orders(request : Request,
             scanned_barcodes=scanned_barcodes,
             selected_entry_dates=selected_entries
         )
-        context["scanned_barcodes"] = scanned_barcodes
-        context["selected_entries"] = selected_entries
+        context["scanned_barcodes"] = sorted(scanned_barcodes)
+        context["selected_entries"] = selected_entries[::-1]
 
         return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
     except Exception as e :
-        return {"error" : str(e)}
+        return templates.TemplateResponse(request=request, name="error.html", context= {"error" : "Required parameters not selected"}) 
     
