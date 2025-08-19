@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Form,UploadFile,File
 from fastapi.security import OAuth2PasswordBearer
 
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from fastapi.middleware.cors import CORSMiddleware
-from .database_managing.models import Scheduled_Order
+from .database_managing.models import *
 from .shopify.shopify_order import Shopify
 from .environment_variables import *
 from .response import Tracking_Response
@@ -100,3 +100,51 @@ def order_page(request : Request, identification : str):
         #return HTMLResponse(content=html_template,status_code=status)
     except Exception as e:
         print(f"Order page error : {e}")
+        
+@app.get("/missing_form")
+def missing_form(request:Request):
+    entry_dates = Scheduled_Order().find_all_entry_timestamps()
+    context = {
+        "timestamps" : reversed([timestamp[0] for timestamp in entry_dates])
+        
+    }
+    try:
+        return templates.TemplateResponse(
+            request=request, name="missing_form.html", context = context
+        )
+    except Exception as e:
+        print(e)
+        
+
+import pandas as pd
+from io import StringIO
+
+@app.post("/find_missing")
+async def find_missing_orders(request : Request,
+    selected_entries:list[str]=Form(),
+    scanned_csv:UploadFile = File()
+    ):
+    scheduled = Scheduled_Order()
+    context = {
+        "scanned_barcodes" : None, "unscanned_orders" : None,
+        "selected_entries" : None
+    }
+    try:
+        file_contents = await scanned_csv.read()
+        decoded = file_contents.decode("utf-8")
+        scanned_df = pd.read_csv(
+            StringIO(decoded)
+        )
+        scanned_barcodes = scanned_df["name"].to_list()
+        
+        context["unscanned_orders"] = scheduled.find_unscanned_orders(
+            scanned_barcodes=scanned_barcodes,
+            selected_entry_dates=selected_entries
+        )
+        context["scanned_barcodes"] = scanned_barcodes
+        context["selected_entries"] = selected_entries
+
+        return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
+    except Exception as e :
+        return {"error" : str(e)}
+    
