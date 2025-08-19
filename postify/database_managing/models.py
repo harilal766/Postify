@@ -24,7 +24,8 @@ class Scheduled_Order(Base):
     def __str__(self):
         return self.Order_ID
     
-    def find_scheduled_order(self,id:str):
+    @classmethod
+    def find_scheduled_order(cls,id:str):
         try:
             sh = Shopify(order_id=id)
             if re.match(sh.order_id_pattern,id):
