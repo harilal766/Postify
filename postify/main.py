@@ -143,8 +143,7 @@ async def find_missing_orders(request : Request,
         )
         context["scanned_barcodes"] = scanned_barcodes
         context["selected_entries"] = selected_entries
-        
-        print(context)
+
         return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
     except Exception as e :
         return {"error" : str(e)}
