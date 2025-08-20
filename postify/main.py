@@ -79,22 +79,22 @@ def order_page(request : Request, identification : str):
         if order:
             status = 200
             
-            tracking_id_pattern = r'EL\d{9}IN'
-            link_pattern = r'https://[^\s"\'<>]+'
+            tracking_id_pattern = r'^EL\d{9}IN'
+            link_pattern = r'https://.*'
             
             for key,value in order.items():
-                link_matches = re.search(link_pattern,value)
-                tracking_id_matches = re.search(tracking_id_pattern,value)
-                print(link_matches)
                 
-                """
+                link_matches = re.search(link_pattern,value)
+                tracking_id_matches = re.match(tracking_id_pattern,value)
+                
                 if link_matches:
                     matched_link = link_matches.group()
+                    print(matched_link)
                     value = value.replace(
                         matched_link, 
                         f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
                     )
-                """
+                
                 if tracking_id_matches:
                     matched_tracking_id = tracking_id_matches.group()
                     tag = 'span'
