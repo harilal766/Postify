@@ -17,6 +17,8 @@ import re, uvicorn
 from pprint import pprint
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+import requests
+
 
 app = FastAPI()
 app.add_middleware(
@@ -49,7 +51,14 @@ def get_order(identification : str):
             # Order Status
             order_response["Status"] = f"Scheduled"
             if scheduled_order.is_bagged() == True:
-                order_response['Status'] += f", Tracking link : https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
+                aftership = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
+                indiapost = "https://www.indiapost.gov.in"
+                
+                aftership_response = requests.get(aftership)
+                print(aftership_response.status_code)
+                
+                order_response['Status'] += f", Track from : {aftership}"
+                
             elif scheduled_order.is_bagged() == False:
                 order_response["Status"] += ", Tracking link will be available soon."
         else:
@@ -89,7 +98,6 @@ def order_page(request : Request, identification : str):
                 
                 if link_matches:
                     matched_link = link_matches.group()
-                    print(matched_link)
                     value = value.replace(
                         matched_link, 
                         f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"

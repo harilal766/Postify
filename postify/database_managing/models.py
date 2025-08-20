@@ -41,7 +41,7 @@ class Scheduled_Order(Base):
             elif entry_time.hour >= 12 and hour_difference >= 27:
                 pass
             
-            print(f"from : {entry_time} to : current time : {current_time} = {hour_difference}")
+            #print(f"from : {entry_time} to : current time : {current_time} = {hour_difference}")
         except Exception as e:
             print(e)
         else:
