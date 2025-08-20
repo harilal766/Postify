@@ -6,6 +6,9 @@ from ..environment_variables import order_table,db_connection
 from sqlalchemy import create_engine,select,func
 from postify.shopify.shopify_order import Shopify
 import re
+from datetime import datetime, timedelta
+import pytz
+
 engine = create_engine(db_connection)
 
 import pandas as pd
@@ -24,6 +27,26 @@ class Scheduled_Order(Base):
     def __str__(self):
         return self.Order_ID
     
+    def is_bagged(self):
+        bagged = False
+        try:
+            ist = pytz.timezone("Asia/Kolkata")
+            current_time = datetime.now(ist)
+            entry_time = datetime.strptime(self.Entry_Date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ist)
+            
+            time_difference = current_time - entry_time
+            hour_difference = time_difference.total_seconds() / 3600
+            if entry_time.hour < 12 and hour_difference >= 7:
+                bagged = True
+            elif entry_time.hour >= 12 and hour_difference >= 27:
+                pass
+            
+            print(f"from : {entry_time} to : current time : {current_time} = {hour_difference}")
+        except Exception as e:
+            print(e)
+        else:
+            return bagged
+    
     @classmethod
     def find_scheduled_order(cls,id:str):
         try:
@@ -33,7 +56,6 @@ class Scheduled_Order(Base):
                 if order:
                     order_id = order['node']['name']
                     id = order_id
-                    print(id,)
             with Session(engine) as session:
                 orders = session.scalars(
                     select(cls).where(

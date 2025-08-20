@@ -45,7 +45,13 @@ def get_order(identification : str):
                 "Speedpost Tracking Id" : scheduled_order.Barcode,
                 "Scheduled on " : scheduled_order.Entry_Date
             })
-            order_response["Status"] = f"Scheduled, Click the Speedpost Tracking id to copy it and track on : https://www.indiapost.gov.in"
+            
+            # Order Status
+            order_response["Status"] = f"Scheduled"
+            if scheduled_order.is_bagged() == True:
+                order_response['Status'] += f", Tracking link : https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
+            elif scheduled_order.is_bagged() == False:
+                order_response["Status"] += ", Tracking link will be available soon."
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
@@ -73,18 +79,22 @@ def order_page(request : Request, identification : str):
         if order:
             status = 200
             
+            tracking_id_pattern = r'EL\d{9}IN'
+            link_pattern = r'https://[^\s"\'<>]+'
             
             for key,value in order.items():
-                link_matches = re.search(r'https://[^\s\#]*',value)
-                tracking_id_matches = re.search(r'EL\d{9}IN',value)
+                link_matches = re.search(link_pattern,value)
+                tracking_id_matches = re.search(tracking_id_pattern,value)
+                print(link_matches)
                 
+                """
                 if link_matches:
                     matched_link = link_matches.group()
                     value = value.replace(
                         matched_link, 
                         f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
                     )
-                    
+                """
                 if tracking_id_matches:
                     matched_tracking_id = tracking_id_matches.group()
                     tag = 'span'
@@ -92,7 +102,7 @@ def order_page(request : Request, identification : str):
                         matched_tracking_id, 
                         f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
                     )
-                    
+                
                 order[key] = value
         else:
             status = 404
