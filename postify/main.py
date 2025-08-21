@@ -17,13 +17,15 @@ import re, uvicorn
 from pprint import pprint
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+import requests
+import pytz
+
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-
 
 app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
@@ -41,11 +43,24 @@ def get_order(identification : str):
             order_response["Name"] = scheduled_order.Name
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
+            
             order_response.update({
                 "Speedpost Tracking Id" : scheduled_order.Barcode,
+            })
+            order_response.update({
                 "Scheduled on " : scheduled_order.Entry_Date
             })
-            order_response["Status"] = f"Scheduled, Click the Speedpost Tracking id to copy it and track on : https://www.indiapost.gov.in"
+            # Order Status
+            order_response["Status"] = f"Scheduled"
+            if scheduled_order.is_bagged() == True:
+                aftership = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
+                indiapost = "https://www.indiapost.gov.in"
+                
+                order_response['Status'] += f", Track from : {aftership}"
+                
+            elif scheduled_order.is_bagged() == False:
+                order_response["Status"] += ", Tracking link will be available afternoon."
+                
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
@@ -73,10 +88,13 @@ def order_page(request : Request, identification : str):
         if order:
             status = 200
             
+            tracking_id_pattern = r'^EL\d{9}IN'
+            link_pattern = r'https://.*'
             
             for key,value in order.items():
-                link_matches = re.search(r'https://[^\s\#]*',value)
-                tracking_id_matches = re.search(r'EL\d{9}IN',value)
+                
+                link_matches = re.search(link_pattern,value)
+                tracking_id_matches = re.match(tracking_id_pattern,value)
                 
                 if link_matches:
                     matched_link = link_matches.group()
@@ -84,7 +102,7 @@ def order_page(request : Request, identification : str):
                         matched_link, 
                         f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
                     )
-                    
+                
                 if tracking_id_matches:
                     matched_tracking_id = tracking_id_matches.group()
                     tag = 'span'
@@ -92,7 +110,7 @@ def order_page(request : Request, identification : str):
                         matched_tracking_id, 
                         f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
                     )
-                    
+                
                 order[key] = value
         else:
             status = 404
