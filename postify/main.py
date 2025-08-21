@@ -18,6 +18,7 @@ from pprint import pprint
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 import requests
+import pytz
 
 
 app = FastAPI()
@@ -25,7 +26,6 @@ app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-
 
 app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
@@ -43,24 +43,24 @@ def get_order(identification : str):
             order_response["Name"] = scheduled_order.Name
             order_response["Order_id"] = scheduled_order.Order_ID
             order_response["Mobile"] = scheduled_order.Mobile
+            
             order_response.update({
                 "Speedpost Tracking Id" : scheduled_order.Barcode,
+            })
+            order_response.update({
                 "Scheduled on " : scheduled_order.Entry_Date
             })
-            
             # Order Status
             order_response["Status"] = f"Scheduled"
             if scheduled_order.is_bagged() == True:
                 aftership = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
                 indiapost = "https://www.indiapost.gov.in"
                 
-                aftership_response = requests.get(aftership)
-                print(aftership_response.status_code)
-                
                 order_response['Status'] += f", Track from : {aftership}"
                 
             elif scheduled_order.is_bagged() == False:
-                order_response["Status"] += ", Tracking link will be available soon."
+                order_response["Status"] += ", Tracking link will be available afternoon."
+                
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
