@@ -52,9 +52,9 @@ def get_order(identification : str):
             })
             # Order Status
             if scheduled_order.is_bagged() == True:
-                aftership = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
+                third_party = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
                 indiapost = "https://www.indiapost.gov.in"
-                order_response['Status'] = f"Tracking : {aftership}"
+                order_response['Status'] = f"Tracking : {third_party}"
             elif scheduled_order.is_bagged() == False:
                 order_response["Status"] = "Scheduled, Tracking link will be available soon."  
         else:
