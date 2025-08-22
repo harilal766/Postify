@@ -51,16 +51,12 @@ def get_order(identification : str):
                 "Scheduled on " : scheduled_order.Entry_Date
             })
             # Order Status
-            order_response["Status"] = f"Scheduled"
             if scheduled_order.is_bagged() == True:
                 aftership = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
                 indiapost = "https://www.indiapost.gov.in"
-                
-                order_response['Status'] += f", Track from : {aftership}"
-                
+                order_response['Status'] = f"Tracking : {aftership}"
             elif scheduled_order.is_bagged() == False:
-                order_response["Status"] += ", Tracking link will be available afternoon."
-                
+                order_response["Status"] = "Scheduled, Tracking link will be available soon."  
         else:
             unscheduled_order = sh_inst.search_in_all_stores()
             status = 200
@@ -73,7 +69,7 @@ def get_order(identification : str):
                     order_response["Mobile"] = customer["phone"]
                 order_response["Order_id"] = unscheduled_order["name"]
                 order_response["Order date"] =  unscheduled_order["createdAt"].split("T")[0]
-                order_response["Status"] = f"Confirmed, {unscheduled_order["displayFulfillmentStatus"].capitalize()}."
+                order_response["Status"] = f"Order Confirmed, will Despatch on next working day."
             else:
                 status = 404
         return order_response
