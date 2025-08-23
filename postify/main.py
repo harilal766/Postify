@@ -125,7 +125,6 @@ class Pickup:
         except Exception as e:
             print(e)
 
-
     async def find_missing_orders(self,request : Request,
         selected_entries:list[str]=Form(),
         scanned_csv:UploadFile = File()
@@ -153,9 +152,23 @@ class Pickup:
             return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
         except Exception as e :
             return templates.TemplateResponse(request=request, name="error.html", context= {"error" : "Required parameters not selected"}) 
+
+
+class Tracking:
+    def __init__(self):
+        self.base_url = "/track/"
         
+    def track_order(self,request: Request):
+        try:
+            return templates.TemplateResponse(
+                request=request, name="tracking_form.html"
+            )
+        except Exception as e:
+            print(e)
+
 order = Order() 
 pickup = Pickup()
+track = Tracking()
 
 router = APIRouter()
 
@@ -166,6 +179,9 @@ router.add_api_route(order.base_url + "{identification}/html",order.order_page,m
 router.add_api_route(pickup.base_url + "missing_form", pickup.missing_form,methods=["GET"])
 router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_orders,methods=["GET"])
 
+router.add_api_route(track.base_url + "", track.track_order,methods=["GET"])
+
+
 app = FastAPI()
 app.include_router(router)
 
@@ -173,6 +189,7 @@ app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
+
 
 app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
