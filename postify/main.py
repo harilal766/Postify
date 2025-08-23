@@ -17,8 +17,10 @@ import re, uvicorn
 from pprint import pprint
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-import requests
-import pytz
+import requests, pytz
+
+import pandas as pd
+from io import StringIO
 
 class Order:
     def __init__(self):
@@ -106,14 +108,66 @@ class Order:
         except Exception as e:
             print(f"Order page error : {e}")
 
-order = Order(); router = APIRouter()
 
+class Pickup:
+    def __init__(self):
+        self.base_url = "/pickup/"
+        
+    def missing_form(self,request:Request):
+        entry_dates = Scheduled_Order().find_all_entry_timestamps()
+        context = {
+            "timestamps" : reversed([timestamp[0] for timestamp in entry_dates])
+        }
+        try:
+            return templates.TemplateResponse(
+                request=request, name="missing_form.html", context = context
+            )
+        except Exception as e:
+            print(e)
+
+
+    async def find_missing_orders(self,request : Request,
+        selected_entries:list[str]=Form(),
+        scanned_csv:UploadFile = File()
+        ):
+        scheduled = Scheduled_Order()
+        context = {
+            "scanned_barcodes" : None, "unscanned_orders" : None,
+            "selected_entries" : None
+        }
+        try:
+            file_contents = await scanned_csv.read()
+            decoded = file_contents.decode("utf-8")
+            scanned_df = pd.read_csv(
+                StringIO(decoded)
+            )
+            scanned_barcodes = scanned_df["name"].to_list()
+            
+            context["unscanned_orders"] = scheduled.find_unscanned_orders(
+                scanned_barcodes=scanned_barcodes,
+                selected_entry_dates=selected_entries
+            )
+            context["scanned_barcodes"] = sorted(scanned_barcodes)
+            context["selected_entries"] = selected_entries[::-1]
+
+            return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
+        except Exception as e :
+            return templates.TemplateResponse(request=request, name="error.html", context= {"error" : "Required parameters not selected"}) 
+        
+order = Order() 
+pickup = Pickup()
+
+router = APIRouter()
+
+# Endpoints 
 router.add_api_route(order.base_url + "{identification}",order.get_order,methods=["GET"])
 router.add_api_route(order.base_url + "{identification}/html",order.order_page,methods=["GET"])
 
+router.add_api_route(pickup.base_url + "missing_form", pickup.missing_form,methods=["GET"])
+router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_orders,methods=["GET"])
+
 app = FastAPI()
 app.include_router(router)
-
 
 app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
@@ -123,51 +177,3 @@ app.add_middleware(
 app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
 
-
-
-        
-@app.get("/missing_form")
-def missing_form(request:Request):
-    entry_dates = Scheduled_Order().find_all_entry_timestamps()
-    context = {
-        "timestamps" : reversed([timestamp[0] for timestamp in entry_dates])
-    }
-    try:
-        return templates.TemplateResponse(
-            request=request, name="missing_form.html", context = context
-        )
-    except Exception as e:
-        print(e)
-        
-import pandas as pd
-from io import StringIO
-
-@app.post("/find_missing")
-async def find_missing_orders(request : Request,
-    selected_entries:list[str]=Form(),
-    scanned_csv:UploadFile = File()
-    ):
-    scheduled = Scheduled_Order()
-    context = {
-        "scanned_barcodes" : None, "unscanned_orders" : None,
-        "selected_entries" : None
-    }
-    try:
-        file_contents = await scanned_csv.read()
-        decoded = file_contents.decode("utf-8")
-        scanned_df = pd.read_csv(
-            StringIO(decoded)
-        )
-        scanned_barcodes = scanned_df["name"].to_list()
-        
-        context["unscanned_orders"] = scheduled.find_unscanned_orders(
-            scanned_barcodes=scanned_barcodes,
-            selected_entry_dates=selected_entries
-        )
-        context["scanned_barcodes"] = sorted(scanned_barcodes)
-        context["selected_entries"] = selected_entries[::-1]
-
-        return templates.TemplateResponse(request=request, name="unscanned.html", context=context) 
-    except Exception as e :
-        return templates.TemplateResponse(request=request, name="error.html", context= {"error" : "Required parameters not selected"}) 
-    
