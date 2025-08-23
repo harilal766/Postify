@@ -1,30 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="track d-flex flex-column dgrid gap-3 justify-content-center align-items-center">
-    <h1>Missing Orders</h1>
-    <form method="post" enctype="multipart/form-data" action ="/find_missing">
-        <div class="mb-3">
-            <label>CSV file of scanned data</label>
-            <input class="form-control" name="scanned_csv" type="file" accept=".csv">
-        </div>
-        <div class="mb-3">
-            <label>Shipment Entry Date</label>
-            {% if timestamps %}
-            <select class="form-select" name="selected_entries" multiple size="4">
-                {% for timestamp in timestamps %}
-                <option  value="{{timestamp}}">{{timestamp}}</option>
-                {% endfor %}
-            </select>
-            {% else %}
-            <h3>No timestamps available.</h3>
-            {% endif %}
-            
-        </div>
-        <div class="mb-3">
-            <button class="btn btn-primary" type="submit">Submit</button>
-        </div>
-    </form>
-</div>
+<h1>Missing Orders</h1>
+<form method="post" enctype="multipart/form-data" action ="/find_missing">
+    <div class="mb-3">
+        <label>CSV file of scanned data</label>
+        <input class="form-control" name="scanned_csv" type="file" accept=".csv">
+    </div>
+
+    <div class="mb-3">
+        <label>Shipment Entry Date</label>
+        {% if timestamps %}
+        <select class="form-select" name="selected_entries" multiple size="4">
+            {% for timestamp in timestamps %}
+            <option  value="{{timestamp}}">{{timestamp}}</option>
+            {% endfor %}
+        </select>
+        {% else %}
+        <h3>No timestamps available.</h3>
+        {% endif %}        
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </div>
+</form>
 
 <div id="missing">
 </div>
