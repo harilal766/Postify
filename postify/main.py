@@ -164,11 +164,12 @@ class Tracking:
         except Exception as e:
             print(e)
             
-    def track_order(self,order_id:str=Form()):
+    def track_order(self,request: Request ,order_id:str=Form()):
         order = Order()
         tracked_order = None
         try:
-            tracked_order = order.get_order(identification=order_id)
+            #tracked_order = order.get_order(identification=order_id)
+            tracked_order = order.order_page(request = request,identification=order_id)
         except Exception as e:
             print(e)
         return tracked_order
