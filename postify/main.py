@@ -108,7 +108,6 @@ class Order:
         except Exception as e:
             print(f"Order page error : {e}")
 
-
 class Pickup:
     def __init__(self):
         self.base_url = "/pickup/"
@@ -153,33 +152,40 @@ class Pickup:
         except Exception as e :
             return templates.TemplateResponse(request=request, name="error.html", context= {"error" : "Required parameters not selected"}) 
 
-
 class Tracking:
     def __init__(self):
-        self.base_url = "/track/"
+        self.base_url = "/track"
         
-    def track_order(self,request: Request):
+    def tracking_form(self,request: Request):
         try:
             return templates.TemplateResponse(
                 request=request, name="tracking_form.html"
             )
         except Exception as e:
             print(e)
-
-order = Order() 
-pickup = Pickup()
-track = Tracking()
+            
+    def track_order(self,order_id:str=Form()):
+        order = Order()
+        tracked_order = None
+        try:
+            tracked_order = order.get_order(identification=order_id)
+        except Exception as e:
+            print(e)
+        return tracked_order
 
 router = APIRouter()
-
 # Endpoints 
+order = Order() 
 router.add_api_route(order.base_url + "{identification}",order.get_order,methods=["GET"])
 router.add_api_route(order.base_url + "{identification}/html",order.order_page,methods=["GET"])
 
+pickup = Pickup()
 router.add_api_route(pickup.base_url + "missing_form", pickup.missing_form,methods=["GET"])
-router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_orders,methods=["GET"])
+router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_orders,methods=["POST"])
 
-router.add_api_route(track.base_url + "", track.track_order,methods=["GET"])
+track = Tracking()
+router.add_api_route(track.base_url, track.tracking_form,methods=["GET"])
+router.add_api_route(track.base_url, track.track_order, methods=["POST"])
 
 
 app = FastAPI()
@@ -189,7 +195,6 @@ app.add_middleware(
     CORSMiddleware,allow_origins = ALLOWED_ORIGINS,allow_credentials = True,
     allow_methods = ["GET"],allow_headers = ["*"],
 )
-
 
 app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
