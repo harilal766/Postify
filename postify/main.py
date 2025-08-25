@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Request, Form,UploadFile,File, APIRouter
 from fastapi.security import OAuth2PasswordBearer
 
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
@@ -154,7 +154,7 @@ class Pickup:
 
 class Tracking:
     def __init__(self):
-        self.base_url = "/track"
+        self.base_url = "/track/"
         
     def tracking_form(self,request: Request):
         try:
@@ -173,6 +173,17 @@ class Tracking:
         except Exception as e:
             print(e)
         return tracked_order
+    
+    def track(self,identification):
+        order = Order().get_order(identification=identification)
+        print(order)
+        try:
+            if "https" in order["Status"]:
+                tracking_id = order.get("Speedpost Tracking Id",None)
+                if tracking_id:
+                    return RedirectResponse(url=f"https://www.aftership.com/track/india-post/{tracking_id}")
+        except Exception as e:
+            print(e)
 
 router = APIRouter()
 # Endpoints 
@@ -187,6 +198,7 @@ router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_order
 track = Tracking()
 router.add_api_route(track.base_url, track.tracking_form,methods=["GET"])
 router.add_api_route(track.base_url, track.track_order, methods=["POST"])
+router.add_api_route(track.base_url + "{identification}", track.track, methods=["GET"])
 
 
 app = FastAPI()
