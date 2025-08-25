@@ -39,7 +39,7 @@ class Scheduled_Order(Base):
             if entry_time.hour < 12 and hour_difference >= 7:
                 bagged = True
             elif entry_time.hour >= 12 and hour_difference >= 27:
-                pass
+                bagged = True
             
             #print(f"from : {entry_time} to : current time : {current_time} = {hour_difference}")
         except Exception as e:
