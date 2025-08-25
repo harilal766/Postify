@@ -124,7 +124,7 @@ class Pickup:
 
 class Tracking:
     def __init__(self):
-        self.base_url = "/track/"
+        self.base_url = "/track"
         
     def tracking_form(self,request: Request):
         try:
@@ -173,11 +173,9 @@ class Tracking:
             print(e)
             
     def track_order(self,request: Request ,order_id:str=Form()):
-        order = Order()
         tracked_order = None
         try:
-            #tracked_order = order.get_order(identification=order_id)
-            tracked_order = order.order_page(request = request,identification=order_id)
+            tracked_order = self.track(request=request,identification=order_id)
         except Exception as e:
             print(e)
         return tracked_order
@@ -194,7 +192,7 @@ router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_order
 
 track = Tracking()
 router.add_api_route(track.base_url, track.tracking_form,methods=["GET"])
-router.add_api_route(track.base_url, track.track_order, methods=["POST"])
+router.add_api_route(track.base_url , track.track_order, methods=["POST"])
 router.add_api_route(track.base_url + "{identification}", track.track, methods=["GET"])
 
 
