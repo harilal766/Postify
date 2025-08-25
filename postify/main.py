@@ -72,39 +72,9 @@ class Order:
             print(f"Order detail error : {e}")
             
     def order_page(self, request : Request, identification : str):
-        order = None
+        track = Tracking()
         try:
-            order = self.get_order(identification=identification)
-            if order:
-                status = 200
-                tracking_id_pattern = r'^EL\d{9}IN'
-                link_pattern = r'https://.*'
-                
-                for key,value in order.items():
-                    
-                    link_matches = re.search(link_pattern,value)
-                    tracking_id_matches = re.match(tracking_id_pattern,value)
-                    
-                    if link_matches:
-                        matched_link = link_matches.group()
-                        value = value.replace(
-                            matched_link, 
-                            f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
-                        )
-                    
-                    if tracking_id_matches:
-                        matched_tracking_id = tracking_id_matches.group()
-                        tag = 'span'
-                        value = value.replace(
-                            matched_tracking_id, 
-                            f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
-                        )
-                    
-                    order[key] = value
-            else:
-                status = 404
-            return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
-            #return HTMLResponse(content=html_template,status_code=status)
+            return track.track(request=request,identification=identification)
         except Exception as e:
             print(f"Order page error : {e}")
 
@@ -163,6 +133,44 @@ class Tracking:
             )
         except Exception as e:
             print(e)
+    
+    def track(self,request : Request, identification):
+        order = Order().get_order(identification=identification)
+        try:
+            if not order:
+                pass
+            
+            if "https" in order["Status"]:
+                tracking_id = order.get("Speedpost Tracking Id",None)
+                if tracking_id:
+                    return RedirectResponse(url=f"https://www.aftership.com/track/india-post/{tracking_id}")
+            else:
+                tracking_id_pattern = r'^EL\d{9}IN'
+                link_pattern = r'https://.*'
+                for key,value in order.items():
+                    
+                    link_matches = re.search(link_pattern,value)
+                    tracking_id_matches = re.match(tracking_id_pattern,value)
+                    
+                    if link_matches:
+                        matched_link = link_matches.group()
+                        value = value.replace(
+                            matched_link, 
+                            f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
+                        )
+                        
+                    if tracking_id_matches:
+                        matched_tracking_id = tracking_id_matches.group()
+                        tag = 'span'
+                        value = value.replace(
+                            matched_tracking_id, 
+                            f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
+                        )
+                    
+                    order[key] = value
+                return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
+        except Exception as e:
+            print(e)
             
     def track_order(self,request: Request ,order_id:str=Form()):
         order = Order()
@@ -173,17 +181,6 @@ class Tracking:
         except Exception as e:
             print(e)
         return tracked_order
-    
-    def track(self,identification):
-        order = Order().get_order(identification=identification)
-        print(order)
-        try:
-            if "https" in order["Status"]:
-                tracking_id = order.get("Speedpost Tracking Id",None)
-                if tracking_id:
-                    return RedirectResponse(url=f"https://www.aftership.com/track/india-post/{tracking_id}")
-        except Exception as e:
-            print(e)
 
 router = APIRouter()
 # Endpoints 
