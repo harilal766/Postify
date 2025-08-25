@@ -193,7 +193,7 @@ router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_order
 track = Tracking()
 router.add_api_route(track.base_url, track.tracking_form,methods=["GET"])
 router.add_api_route(track.base_url , track.track_order, methods=["POST"])
-router.add_api_route(track.base_url + "{identification}", track.track, methods=["GET"])
+router.add_api_route(track.base_url + "/{identification}", track.track, methods=["GET"])
 
 
 app = FastAPI()
