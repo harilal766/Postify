@@ -6,5 +6,4 @@ class Test_Shopify():
     def test_search_in_all_stores(self):
         sh = Shopify(order_id="40858")
         print(sh.search_in_all_stores())
-        assert sh.order_id == sh.search_in_all_stores()
-        
+        assert sh.order_id in sh.search_in_all_stores()['node']['name']
