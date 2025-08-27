@@ -45,11 +45,11 @@ class Order:
                     "Scheduled on " : scheduled_order.Entry_Date
                 })
                 # Order Status
-                if scheduled_order.is_bagged() == True:
+                if scheduled_order.is_despatched_and_bagged() == True:
                     third_party = f"https://www.aftership.com/track/india-post/{scheduled_order.Barcode}"
                     indiapost = "https://www.indiapost.gov.in"
                     order_response['Status'] = f"Tracking : {third_party}"
-                elif scheduled_order.is_bagged() == False:
+                elif scheduled_order.is_despatched_and_bagged() == False:
                     order_response["Status"] = "Scheduled, Tracking link will be available soon."  
             else:
                 unscheduled_order = sh_inst.search_in_all_stores()

@@ -27,26 +27,6 @@ class Scheduled_Order(Base):
     def __str__(self):
         return self.Order_ID
     
-    def is_bagged(self):
-        bagged = False
-        try:
-            ist = pytz.timezone("Asia/Kolkata")
-            current_time = datetime.now(ist)
-            entry_time = datetime.strptime(self.Entry_Date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ist)
-            
-            time_difference = current_time - entry_time
-            hour_difference = time_difference.total_seconds() / 3600
-            if entry_time.hour < 12 and hour_difference >= 7:
-                bagged = True
-            elif entry_time.hour >= 12 and hour_difference >= 27:
-                bagged = True
-            
-            #print(f"from : {entry_time} to : current time : {current_time} = {hour_difference}")
-        except Exception as e:
-            print(e)
-        else:
-            return bagged
-    
     @classmethod
     def find_scheduled_order(cls,id:str):
         try:
@@ -67,6 +47,37 @@ class Scheduled_Order(Base):
         except Exception as e:
             print(e)
             
+    def is_despatched_and_bagged(self):
+        bagged = False
+        try:
+            ist = pytz.timezone("Asia/Kolkata")
+            current_time = datetime.now(ist)
+            entry_time = datetime.strptime(self.Entry_Date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ist)
+            
+            time_difference = current_time - entry_time
+            hour_difference = time_difference.total_seconds() / 3600
+            if entry_time.hour < 12 and hour_difference >= 7:
+                bagged = True
+            elif entry_time.hour >= 12 and hour_difference >= 27:
+                bagged = True
+            
+            #print(f"from : {entry_time} to : current time : {current_time} = {hour_difference}")
+        except Exception as e:
+            print(e)
+        else:
+            return bagged
+        
+    @classmethod
+    def find_all_entry_timestamps(cls):
+        timestamps = None
+        try:
+            with Session(engine) as session:
+                timestamps = session.query(cls.Entry_Date.distinct()).all()
+        except Exception as e:
+            print(e)
+        else:
+            return timestamps
+        
     @classmethod
     def find_unscanned_orders(cls, selected_entry_dates:list, scanned_barcodes):
         orders = None
@@ -81,13 +92,4 @@ class Scheduled_Order(Base):
         else:
             return orders
     
-    @classmethod
-    def find_all_entry_timestamps(cls):
-        timestamps = None
-        try:
-            with Session(engine) as session:
-                timestamps = session.query(cls.Entry_Date.distinct()).all()
-        except Exception as e:
-            print(e)
-        else:
-            return timestamps
+    
