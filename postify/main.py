@@ -189,10 +189,12 @@ pickup = Pickup()
 router.add_api_route(pickup.base_url + "missing_form", pickup.missing_form,methods=["GET"])
 router.add_api_route(pickup.base_url + "find_missing", pickup.find_missing_orders,methods=["POST"])
 
+
 tracking = Tracking()
 router.add_api_route(tracking.base_url, tracking.tracking_form,methods=["GET"])
 router.add_api_route(tracking.base_url , tracking.track_order, methods=["POST"])
 router.add_api_route(tracking.base_url + "/{identification}", tracking.show_tracking_page, methods=["GET"])
+
 
 
 app = FastAPI()
