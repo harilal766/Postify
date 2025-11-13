@@ -142,7 +142,7 @@ class Tracking:
             if "https" in order["Status"]:
                 tracking_id = order.get("Speedpost Tracking Id",None)
                 aftership = f'https://www.aftership.com/track/india-post/{tracking_id}'
-                myspeedpost = f"https://myspeedpost.com/s/{tracking_id}"
+                myspeedpost = f"https://myspeedpost.com/track?n={tracking_id}"
                 if tracking_id:
                     return RedirectResponse(url=myspeedpost)
             else:
