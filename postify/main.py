@@ -135,10 +135,7 @@ class Tracking:
     
     def show_tracking_page(self,request : Request, identification):
         order = Order().get_order(identification=identification)
-        try:
-            if not order:
-                pass
-            
+        try:            
             if "https" in order["Status"]:
                 tracking_id = order.get("Speedpost Tracking Id",None)
                 aftership = f'https://www.aftership.com/track/india-post/{tracking_id}'
@@ -176,8 +173,6 @@ class Tracking:
                                 )
                             order[key] = value
                     return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
-            else:
-                print("Status Error")
         except Exception as e:
             print(e)
             
