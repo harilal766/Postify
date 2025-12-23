@@ -160,16 +160,24 @@ class Tracking:
                                 f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
                             )
                             
-                        if tracking_id_matches:
-                            matched_tracking_id = tracking_id_matches.group()
-                            tag = 'span'
-                            value = value.replace(
-                                matched_tracking_id, 
-                                f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
-                            )
-                        
-                        order[key] = value
-                return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
+                            if link_matches:
+                                matched_link = link_matches.group()
+                                value = value.replace(
+                                    matched_link, 
+                                    f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
+                                )
+                                
+                            if tracking_id_matches:
+                                matched_tracking_id = tracking_id_matches.group()
+                                tag = 'span'
+                                value = value.replace(
+                                    matched_tracking_id, 
+                                    f"<{tag} type='text' class='copy'>{matched_tracking_id}</{tag}>"
+                                )
+                            order[key] = value
+                    return templates.TemplateResponse(request=request, name="tracking_result.html", context={"order" : order}) 
+            else:
+                print("Status Error")
         except Exception as e:
             print(e)
             
