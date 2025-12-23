@@ -63,7 +63,7 @@ class Order:
                         order_response["Mobile"] = customer["phone"]
                     order_response["Order_id"] = unscheduled_order["name"]
                     order_response["Order date"] =  unscheduled_order["createdAt"].split("T")[0]
-                    order_response["Status"] = f"Order Confirmed, will dispatch on the next working day, Estimated delivery time : 3-5 working days."
+                    order_response["Status"] = f"Your order has been successfully confirmed and will be dispatched on the next working day. The estimated delivery time is 3–5 business days."
                 else:
                     status = 404
             return order_response
