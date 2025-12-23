@@ -136,21 +136,29 @@ class Tracking:
     def show_tracking_page(self,request : Request, identification):
         order = Order().get_order(identification=identification)
         try:
-            status = order.get("Status",None)
-            if status != None:
-                if "https" in status:
-                    tracking_id = order.get("Speedpost Tracking Id",None)
-                    aftership = f'https://www.aftership.com/track/india-post/{tracking_id}'
-                    myspeedpost = f"https://myspeedpost.com/s/{tracking_id}"
-                    if tracking_id:
-                        return RedirectResponse(url=myspeedpost)
-                else:
-                    tracking_id_pattern = r'^EL\d{9}IN'
-                    link_pattern = r'https://.*'
-                    for key,value in order.items():
-                        if value != None:
-                            link_matches = re.search(link_pattern,value)
-                            tracking_id_matches = re.match(tracking_id_pattern,value)
+            if not order:
+                pass
+            
+            if "https" in order["Status"]:
+                tracking_id = order.get("Speedpost Tracking Id",None)
+                aftership = f'https://www.aftership.com/track/india-post/{tracking_id}'
+                myspeedpost = f"https://myspeedpost.com/track?n={tracking_id}"
+                if tracking_id:
+                    return RedirectResponse(url=myspeedpost)
+            else:
+                tracking_id_pattern = r'^EL\d{9}IN'
+                link_pattern = r'https://.*'
+                for key,value in order.items():
+                    if value != None:
+                        link_matches = re.search(link_pattern,value)
+                        tracking_id_matches = re.match(tracking_id_pattern,value)
+                        
+                        if link_matches:
+                            matched_link = link_matches.group()
+                            value = value.replace(
+                                matched_link, 
+                                f"<a target='_blank' href='{matched_link}'>{matched_link.strip("https://www.")}</a>"
+                            )
                             
                             if link_matches:
                                 matched_link = link_matches.group()
