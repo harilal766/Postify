@@ -5,7 +5,7 @@ from postify.environment_variables import shopify_stores
 class Shopify:
     def __init__(self,order_id : str):
         self.order_id_pattern = r'#?\d{4,5}'
-        self.order_id = order_id
+        self.order_id = re.sub(r"[A-Za-z#]","",order_id)
         self.shopify_dict = shopify_stores
         
     def search_in_all_stores(self):
@@ -35,7 +35,9 @@ class Shopify:
             "X-Shopify-Access-Token" : access_token
         }; version = "2025-04"
         base_url = f"https://{storename}.myshopify.com/admin/api/{version}/graphql.json"
-        response = None
+        response = None; order = None
+        
+        print(f"Order id : {self.order_id}")
         try:
             shopify_basic_query = """
                 query {
@@ -53,7 +55,7 @@ class Shopify:
                         }
                     }
                 }
-            """ % self.order_id
+            """ %self.order_id
             
             if re.match(self.order_id_pattern, self.order_id):
                 response = requests.post(
@@ -65,6 +67,5 @@ class Shopify:
         except Exception as e:
             print(e)
         else:
-            if order != []:
-                return order       
+            return order       
             

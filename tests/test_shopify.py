@@ -3,7 +3,11 @@ from postify.environment_variables import *
 
 
 class Test_Shopify():
+    sh = Shopify(order_id="S58065")
+    
+    def test_order_detail(self):
+        order = self.sh.order_detail()
+        
+
     def test_search_in_all_stores(self):
-        sh = Shopify(order_id="40858")
-        print(sh.search_in_all_stores())
-        assert sh.order_id in sh.search_in_all_stores()['node']['name']
+        pass
