@@ -141,7 +141,7 @@ class Tracking:
                 aftership = f'https://www.aftership.com/track/india-post/{tracking_id}'
                 myspeedpost = f"https://myspeedpost.com/track?n={tracking_id}"
                 if tracking_id:
-                    return RedirectResponse(url=myspeedpost)
+                    return RedirectResponse(url=aftership)
             else:
                 tracking_id_pattern = r'^EL\d{9}IN'
                 link_pattern = r'https://.*'
@@ -212,4 +212,3 @@ app.add_middleware(
 
 app.mount("/postify/static", StaticFiles(directory="postify/static"), name="postify_static")
 templates = Jinja2Templates(directory="postify/templates")
-
