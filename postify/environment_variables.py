@@ -1,6 +1,8 @@
 from postify.utils import *
 
-credentials = get_credentials(json_filename="credentials.json", env_filename="CREDENTIALS")
+credentials = get_credentials(
+    json_filename="credentials.json", env_filename="CREDENTIALS"
+)
 
 db_access = credentials["database"]
 db_connection = db_access["connection"]
