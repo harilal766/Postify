@@ -39,7 +39,7 @@ class Shopify:
         
         print(f"Order id : {self.order_id}")
         try:
-            shopify_basic_query = """
+            order_detail_query = """
                 query {
                     orders(first:1, query: "%s", sortKey: CREATED_AT, reverse: true) {
                         edges {
@@ -51,15 +51,27 @@ class Shopify:
                                     name
                                     phone
                                 }
+                                fulfillments {
+                                    createdAt
+                                    trackingInfo {
+                                        company
+                                        number
+                                    }
+                                }
                             }
                         }
                     }
                 }
             """ %self.order_id
             
+            tracking_info_query = """
+                query {
+                    
+                }
+            """
             if re.match(self.order_id_pattern, self.order_id):
                 response = requests.post(
-                    base_url, headers=headers,json = {"query" : shopify_basic_query}
+                    base_url, headers=headers,json = {"query" : order_detail_query}
                 )
                 order = response.json()["data"]["orders"]["edges"]
         except requests.RequestException as e:

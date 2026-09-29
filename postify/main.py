@@ -64,6 +64,13 @@ class Order:
                     order_response["Order_id"] = unscheduled_order["name"]
                     order_response["Order date"] =  unscheduled_order["createdAt"].split("T")[0]
                     order_response["Status"] = f"Your order has been successfully confirmed and will be dispatched on the next working day. The estimated delivery time is 3–5 business days via India Post Speed Post."
+                    fulfillment = unscheduled_order.get("fulfillments",None)
+                    if fulfillment:
+                        fulfillment = fulfillment[0]
+                        tracking_info = fulfillment.get("trackingInfo",None)
+                        if tracking_info:
+                            tracking_info = tracking_info[0]
+                            order_response["Speedpost Tracking Id"] = tracking_info.get("number",None)
                 else:
                     status = 404
             return order_response
