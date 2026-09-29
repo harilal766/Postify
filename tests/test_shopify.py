@@ -11,12 +11,10 @@ class Test_Shopify():
         test_storename = creds["shopify_stores"][test_shopify_store]["storename"]
         test_access_token = creds["shopify_stores"][test_shopify_store]["access_token"]
         
-    
-    
+
     def test_order_detail(self):
         order = self.sh.order_detail(storename=self.test_storename, access_token=self.test_access_token)
-        print(order)
         
-
     def test_search_in_all_stores(self):
-        pass
+        order = self.sh.search_in_all_stores()
+        print(order)
