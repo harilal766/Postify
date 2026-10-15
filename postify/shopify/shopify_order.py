@@ -53,9 +53,11 @@ class Shopify:
                                 }
                                 fulfillments {
                                     createdAt
+                                    displayStatus
                                     trackingInfo {
                                         company
                                         number
+                                        url
                                     }
                                 }
                             }

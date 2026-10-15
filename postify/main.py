@@ -63,14 +63,16 @@ class Order:
                         order_response["Mobile"] = customer["phone"]
                     order_response["Order_id"] = unscheduled_order["name"]
                     order_response["Order date"] =  unscheduled_order["createdAt"].split("T")[0]
-                    order_response["Status"] = f"Your order has been successfully confirmed and will be dispatched on the next working day. The estimated delivery time is 3–5 business days via India Post Speed Post."
+                    #order_response["Status"] = f"Your order has been successfully confirmed and will be dispatched on the next working day. The estimated delivery time is 3–5 business days via India Post Speed Post."
                     fulfillment = unscheduled_order.get("fulfillments",None)
                     if fulfillment:
                         fulfillment = fulfillment[0]
+                        order_response["Status"] = fulfillment.get("displayStatus",None)
                         tracking_info = fulfillment.get("trackingInfo",None)
                         if tracking_info:
                             tracking_info = tracking_info[0]
                             order_response["Speedpost Tracking Id"] = tracking_info.get("number",None)
+                            order_response["Tracking Link"] = tracking_info.get("url",None)
                 else:
                     status = 404
             return order_response
@@ -143,12 +145,15 @@ class Tracking:
     def show_tracking_page(self,request : Request, identification):
         order = Order().get_order(identification=identification)
         try:            
-            if "https" in order["Status"]:
+            if order.get("Status",None):
                 tracking_id = order.get("Speedpost Tracking Id",None)
                 aftership = f'https://www.aftership.com/track/india-post/{tracking_id}'
                 myspeedpost = f"https://myspeedpost.com/?n={tracking_id}"
                 if tracking_id:
-                    return RedirectResponse(url=myspeedpost)
+                    if order.get("Tracking Link",None):
+                        return RedirectResponse(url=order["Tracking Link"])
+                    else:
+                        return RedirectResponse(url=aftership)
             else:
                 tracking_id_pattern = r'^EL\d{9}IN'
                 link_pattern = r'https://.*'

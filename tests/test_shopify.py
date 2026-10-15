@@ -14,7 +14,8 @@ class Test_Shopify():
 
     def test_order_detail(self):
         order = self.sh.order_detail(storename=self.test_storename, access_token=self.test_access_token)
+        assert order
         
     def test_search_in_all_stores(self):
         order = self.sh.search_in_all_stores()
-        print(order)
+        assert order
