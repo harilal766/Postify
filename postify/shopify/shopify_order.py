@@ -56,6 +56,7 @@ class Shopify:
                                     trackingInfo {
                                         company
                                         number
+                                        url
                                     }
                                 }
                             }
