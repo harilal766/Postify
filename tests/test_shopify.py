@@ -18,5 +18,4 @@ class Test_Shopify():
         
     def test_search_in_all_stores(self):
         order = self.sh.search_in_all_stores()
-        print(order)
         assert order

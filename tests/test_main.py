@@ -5,6 +5,15 @@ from postify.environment_variables import *
 from postify.main import *
 
 
+class Test_Order():
+    order_instance = Order()
+    
+    def test_get_order(self):
+        order_detail = self.order_instance.get_order(identification="S151576")    
+        print(order_detail)
+        assert order_detail
+
+
 def test_origins():
     http_count = 0
     for origin in ALLOWED_ORIGINS:
